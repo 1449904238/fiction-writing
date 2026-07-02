@@ -80,19 +80,58 @@ if (Test-Path -LiteralPath $detailDir) {
 }
 
 # 4. 检查伏笔追踪
-$foreshadowFile = Join-Path -Path $ProjectPath -ChildPath "追踪\伏笔.md"
+$foreshadowFile = Join-Path -Path $ProjectPath -ChildPath "追踪\伏笔追踪表.md"
+if (-not (Test-Path -LiteralPath $foreshadowFile)) {
+    # 兼容旧命名 伏笔.md
+    $altForeshadow = Join-Path -Path $ProjectPath -ChildPath "追踪\伏笔.md"
+    if (Test-Path -LiteralPath $altForeshadow) { $foreshadowFile = $altForeshadow }
+}
+
 if (Test-Path -LiteralPath $foreshadowFile) {
     $content = Get-Content -LiteralPath $foreshadowFile -Raw
-    # 检查是否有ACTIVE状态超过50章未回收的伏笔
-    if ($content -match 'ACTIVE.*第(\d+)章') {
-        Write-Host "伏笔追踪表存在，检查 ACTIVE 伏笔..."
+    Write-Host "伏笔追踪表存在，检查 ACTIVE 伏笔超期..."
+
+    # 计算当前章节号（取正文目录中最大章节号，回退到细纲最大章节号）
+    $currentChapter = 0
+    $proseDirCur = Join-Path -Path $ProjectPath -ChildPath "正文"
+    if (Test-Path -LiteralPath $proseDirCur) {
+        $proseFilesCur = Get-ChildItem -LiteralPath $proseDirCur -Filter "*.md" -ErrorAction SilentlyContinue
+        foreach ($p in $proseFilesCur) {
+            if ($p.BaseName -match '(\d+)') { $n = [int]$matches[1]; if ($n -gt $currentChapter) { $currentChapter = $n } }
+        }
     }
+    if ($currentChapter -eq 0 -and (Test-Path -LiteralPath $detailDir)) {
+        $detailFilesCur = Get-ChildItem -LiteralPath $detailDir -Filter "*.md" -ErrorAction SilentlyContinue
+        foreach ($d in $detailFilesCur) {
+            if ($d.BaseName -match '(\d+)') { $n = [int]$matches[1]; if ($n -gt $currentChapter) { $currentChapter = $n } }
+        }
+    }
+
+    # 解析每条 ACTIVE 伏笔的起始章节号，检测超期（>50 章未回收）
+    # 启发式解析：优先匹配 起始/埋设/埋下 关键字后的 第N章，否则取该行第一个 第N章
+    $foreshadowLines = $content -split "`r?`n"
+    foreach ($line in $foreshadowLines) {
+        if ($line -notmatch 'ACTIVE') { continue }
+        $startChapter = 0
+        if ($line -match '(?:起始|埋设|埋下|埋下伏笔|开始).*?第(\d+)章') {
+            $startChapter = [int]$matches[1]
+        } elseif ($line -match '第(\d+)章') {
+            $startChapter = [int]$matches[1]
+        }
+        if ($startChapter -gt 0 -and $currentChapter -gt 0) {
+            $gap = $currentChapter - $startChapter
+            if ($gap -gt 50) {
+                $warnings += "⚠️ 伏笔超期：ACTIVE 伏笔（第${startChapter}章埋设）已 ${gap} 章未回收（当前第${currentChapter}章，阈值50）"
+            }
+        }
+    }
+
     # 检查是否有空的伏笔追踪表
     if ($content.Length -lt 100) {
         $warnings += "⚠️ 伏笔追踪表几乎为空 — 建议在写作过程中登记伏笔"
     }
 } else {
-    $warnings += "⚠️ 缺少 追踪/伏笔.md — 建议创建伏笔追踪表"
+    $warnings += "⚠️ 缺少 追踪/伏笔追踪表.md — 建议创建伏笔追踪表"
 }
 
 # 5. 检查正文与细纲对应

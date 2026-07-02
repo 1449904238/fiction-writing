@@ -26,6 +26,9 @@ references:
   - "references/03_检测器_描写与空间.md"
   - "references/03_检测器_叙事与角色.md"
   - "references/03_检测器_爽点与对照表.md"
+  # 03质感系统（V4.4新增）
+  - "references/03_质感注入协议.md"
+  - "references/03_质感锚点库.md"
   # 语言素材库
   - "references/素材库统一索引.md"
   - "references/成语库.md"

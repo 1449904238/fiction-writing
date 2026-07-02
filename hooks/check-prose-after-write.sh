@@ -57,7 +57,18 @@ if [ -f "$SCRIPT2" ]; then
     fi
 fi
 
-# 3. 字数欠账粗检
+# 3. normalize-punctuation.js (report-only，不加 --write)
+SCRIPT3="$SCRIPTS_DIR/normalize-punctuation.js"
+if [ -f "$SCRIPT3" ]; then
+    out3=$("$NODE" "$SCRIPT3" "$FILE_PATH" 2>&1)
+    if echo "$out3" | grep -qE "发现.*处标点问题"; then
+        advisory=$((advisory+1))
+        echo "[check-prose-after-write] ADVISORY (punctuation): 标点规范化建议（report-only）"
+        echo "$out3" | head -5 | sed 's/^/  /'
+    fi
+fi
+
+# 4. 字数欠账粗检
 char_count=$(tr -d '[:space:]' < "$FILE_PATH" | wc -m)
 if [ "$char_count" -lt 3000 ]; then
     advisory=$((advisory+1))

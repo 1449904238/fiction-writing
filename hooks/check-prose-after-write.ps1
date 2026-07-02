@@ -61,7 +61,18 @@ if (Test-Path $script2) {
     }
 }
 
-# 3. 字数欠账粗检（正文文件）
+# 3. normalize-punctuation.js (report-only，不加 --write)
+$script3 = Join-Path $ScriptsDir "normalize-punctuation.js"
+if (Test-Path $script3) {
+    $out3 = & $Node $script3 $FilePath 2>&1
+    if ($out3 -match "发现.*处标点问题") {
+        $advisory++
+        Write-Host "[check-prose-after-write] ADVISORY (punctuation): 标点规范化建议（report-only）" -ForegroundColor Yellow
+        $out3 | Select-Object -First 5 | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
+    }
+}
+
+# 4. 字数欠账粗检（正文文件）
 $content = Get-Content $FilePath -Raw -Encoding UTF8
 $charCount = ($content -replace '\s', '').Length
 if ($charCount -lt 3000) {

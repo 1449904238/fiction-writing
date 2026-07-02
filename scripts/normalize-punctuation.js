@@ -11,30 +11,33 @@
  *   - 可选引号风格转换（keep/ascii/yan）
  * 
  * 用法：
- *   --check     只检查不修改（report-only）
+ *   --write     执行实际修改（默认不修改，只报告）
+ *   --check     向后兼容别名（report-only，现为默认行为）
  *   --quote-mode keep|ascii|yan  引号风格（默认 keep 不动）
  * 
- * 默认模式：直接修改文件。配合 05_去AI味精修师 Post-Step 使用。
+ * 默认模式：report-only（只报告不修改）。使用 --write 参数执行实际修改。
+ * 配合 05_去AI味精修师 Post-Step 使用。
  * 本地标点规则：省略号≤5/破折号≤8/感叹号≤15 每章。
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const USAGE = `Usage: node normalize-punctuation.js [--check] [--quote-mode keep|ascii|yan] <file...>
+const USAGE = `Usage: node normalize-punctuation.js [--write] [--check] [--quote-mode keep|ascii|yan] <file...>
 
 Normalize punctuation in prose files:
   - Replace ellipses (……/...), em-dashes (——/—/--), double-hyphens
   - Remove markdown divider lines (---)
   - Optional quote style conversion
 
-Default: modify files in place. Use --check for report-only.`;
+Default: report-only (do not modify files). Use --write to modify files in place.`;
 
-const options = { check: false, quoteMode: 'keep', files: [] };
+const options = { write: false, quoteMode: 'keep', files: [] };
 
 for (let i = 2; i < process.argv.length; i++) {
   const arg = process.argv[i];
-  if (arg === '--check') { options.check = true; }
+  if (arg === '--write') { options.write = true; }
+  else if (arg === '--check') { /* backward-compat: report-only is now the default */ }
   else if (arg === '--quote-mode') { options.quoteMode = process.argv[++i]; }
   else if (arg.startsWith('--quote-mode=')) { options.quoteMode = arg.slice('--quote-mode='.length); }
   else if (arg === '-h' || arg === '--help') { process.stdout.write(USAGE); process.exit(0); }
@@ -56,8 +59,16 @@ for (const file of options.files) {
   const result = normalizeDocument(input, options.quoteMode);
   totalFindings += result.findings.length;
 
-  if (options.check) {
-    for (const f of result.findings) console.log(`${file}:${f.line}:${f.column}: ${f.type}: ${f.message}`);
+  if (!options.write) {
+    // report-only 模式：输出修改建议报告（列出每处替换的位置和内容），不修改文件
+    if (result.findings.length > 0) {
+      console.log(`${file}: 发现 ${result.findings.length} 处标点问题（report-only，未修改文件）:`);
+      for (const f of result.findings) {
+        console.log(`  L${f.line}:C${f.column} [${f.type}] ${f.message}`);
+      }
+    } else {
+      console.log(`${file}: 无标点问题`);
+    }
     continue;
   }
 
@@ -69,8 +80,8 @@ for (const file of options.files) {
 }
 
 if (failed) process.exit(2);
-if (options.check && totalFindings > 0) process.exit(1);
-if (!options.check) console.log(`Done. Changed files: ${changedFiles}`);
+if (!options.write && totalFindings > 0) process.exit(1);
+if (options.write) console.log(`Done. Changed files: ${changedFiles}`);
 
 function die(m) { console.error(m); console.error(USAGE.trimEnd()); process.exit(2); }
 

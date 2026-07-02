@@ -12,9 +12,52 @@
 | `detect-story-gaps.ps1/.sh` | 巡检型 | 会话启动时（建议随 session-start） | 自动巡检设定缺口、大纲缺失、伏笔断线、细纲覆盖 |
 | `pre-compact.ps1/.sh` | 保存型 | 上下文压缩前 | 自动保存进度快照到 `追踪/compact-snapshots/` |
 | `guard-outline-before-prose.ps1/.sh` | **阻断型** | 写正文前 | 检查对应章节细纲是否存在，缺则阻止（exit 1） |
-| `check-prose-after-write.ps1/.sh` | **写后兜底**（v2.1新增） | 正文落盘后（PostToolUse） | 自动运行3个确定性脚本，报告 blocking 级 finding（截断/复读/工程词/否定翻转/字数欠账） |
+| `check-prose-after-write.ps1/.sh` | **写后兜底**（v2.1新增） ⭐**推荐默认启用** | 正文落盘后（PostToolUse） | 自动运行3个确定性脚本，报告 blocking 级 finding（截断/复读/工程词/否定翻转/字数欠账） |
 
 > Codex 端用 `.codex/hooks/story_codex_hook.py`（Python 适配器，因 Codex 无 PostToolUse，改用 Stop 触发）。
+
+---
+
+## ⚠️ 推荐默认启用：check-prose-after-write
+
+> **这是写后质量兜底的关键 hook，建议在项目初始化时立即配置。**
+>
+> 该 hook 在正文落盘后自动运行 3 个确定性脚本（check-ai-patterns / check-degeneration / normalize-punctuation），能在 AI 写完正文的瞬间拦截截断、复读、工程词、否定翻转、字数欠账等 blocking 级问题。**不配置 = 裸奔写作**，AI 味和质量问题可能积累到后期才发现，返工成本极高。
+
+### 一键启用（三平台最简配置）
+
+复制以下配置到对应平台的 hook 配置文件即可启用，无需额外操作：
+
+**Claude Code**（写入 `.claude/settings.local.json`）：
+```json
+{
+  "hooks": {
+    "PostToolUse": "bash fiction-writing/hooks/check-prose-after-write.sh ${PROJECT_PATH} ${TOOL_FILE_PATH}"
+  }
+}
+```
+
+**OpenCode**（写入 `opencode.json`）：
+```json
+{
+  "hooks": {
+    "tool.execute.after": ["powershell", "-File", "hooks/check-prose-after-write.ps1", "-ProjectPath", "${PROJECT_PATH}", "-FilePath", "${TOOL_FILE_PATH}"]
+  }
+}
+```
+
+**Trae**（写入 `.trae/config.json`）：
+```json
+{
+  "hooks": {
+    "postToolUse": "powershell -File fiction-writing/hooks/check-prose-after-write.ps1 -ProjectPath ${PROJECT_PATH} -FilePath ${TOOL_FILE_PATH}"
+  }
+}
+```
+
+> 配置完成后，每次 AI 写完正文文件自动触发，exit 0 = 无 blocking，exit 2 = 有 blocking 需回 05 去AI味或重新生成。
+
+---
 
 ## 跨平台 Hook Parity（v2.1 新增）
 
@@ -108,4 +151,4 @@ PreCompact = ".codex/hooks/story_codex_hook.py --event pre-compact --project-pat
 2. hooks 按平台格式提供：Windows 用 `.ps1`，Linux/Mac 用 `.sh`，Codex 用 `.py`
 3. `.codex/`、`.trae/`、`.claude/` 部署说明见各自目录下的 `skills/README.md`
 4. settings 文件不跨平台覆盖——部署时只写当前平台的配置，保留用户已有配置
-5. `check-prose-after-write` 默认不自动启用，需手动配置到平台 hook 系统才生效
+5. `check-prose-after-write` **推荐默认启用**（见上方"一键启用"章节），需手动配置到平台 hook 系统才生效；未配置时不影响其他 hook 的正常运行

@@ -99,7 +99,7 @@ This is a **网文工业化创作 OS** — a complete, 7-step AI-assisted novel 
 
 - **Word count**: 3500-4500 Chinese chars/chapter (4000±500)
 - **Dialogue ratio**: ≤60%
-- **Punctuation limits** (step 5): 省略号≤5, 破折号≤8, 感叹号≤15 per chapter
+- **Punctuation limits** (step 5): 省略号≤5, 破折号≤4, 感叹号≤15 per chapter
 - **Scenes per chapter**: 3-5, classified as core(1200-1800) / important(800-1200) / transitional(400-800) / accent(200-400)
 - **Hook types**: 13 chapter-end + 7 chapter-start. No repeat in 3 consecutive chapters.
 - **Sensory priority**: touch/smell > hearing > vision

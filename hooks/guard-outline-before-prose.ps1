@@ -7,8 +7,15 @@
 
 param(
     [string]$ProjectPath = "",
-    [int]$Chapter = 0
+    [int]$Chapter = 0,
+    [switch]$Force
 )
+
+# -Force：跳过检查直接放行
+if ($Force) {
+    Write-Host "⏭️ -Force 已指定，跳过细纲检查"
+    exit 0
+}
 
 if (-not $ProjectPath) {
     Write-Host "Usage: .\guard-outline-before-prose.ps1 -ProjectPath `"C:\path\to\project`" -Chapter <number>"
