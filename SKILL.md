@@ -1,7 +1,7 @@
 ---
 name: "小说全流程创作"
-description: "小说创作全流程编排技能。从核心灵感到正文终稿，分7步推进：项目初始化→设定架构→大纲→细纲→扩写→精修→去AI味，支持从任意步骤开始，每步完成后确认再进入下一步。扩展技能包括拆文(含扫榜调研)/短篇/导入/审稿。当用户说我写小说、创作网文、需要全流程辅助时调用。"
-version: "2.0.0"
+description: "小说创作全流程编排技能。从核心灵感到正文终稿，分7步推进：项目初始化→设定架构→大纲→细纲→扩写→精修→去AI味，支持从任意步骤开始，每步完成后确认再进入下一步。扩展技能包括拆文(含扫榜调研+对标节奏迁移M1-M5)/短篇/导入/审稿。当用户说我写小说、创作网文、需要全流程辅助时调用。"
+version: "2.1.0"
 references:
   # 核心流水线 (0-6步)
   - "00.5_项目初始化.md"
@@ -34,13 +34,16 @@ references:
   - "references/怼人话术库.md"
   - "references/打斗动作库.md"
   - "references/网文通用高频词替换库.md"
+  - "references/改写范例库.md"
   # 确定性脚本
   - "scripts/check-ai-patterns.js"
   - "scripts/check-degeneration.js"
   - "scripts/normalize-punctuation.js"
 ---
-# 小说全流程创作 V2.0
+# 小说全流程创作 V2.1
 
+> **V2.1 更新**（2026-06-30）：基于 oh-story-claudecode 深度对比后的增量强化。05 去AI味 V1.3→V1.4（三遍法映射层+重复语义四类+修饰词清扫+收敛终止+字数协议，11 Gate 不缩减）；06 拆文师 V2.0→V2.1（对标节奏迁移 M1-M5+legacy 回退）；03 扩写 V4.3→V4.3.1（字数欠账定位协议）；新建 references/改写范例库.md；跨平台真正落地（.codex/.trae/.claude 部署说明+6个.sh hooks+check-prose-after-write 自动兜底 hook+Codex Python 适配器）。
+>
 > **V2.0 更新**（2026-06-28）：融合 oh-story-claudecode 工程化体系。新增：跨平台支持（Claude Code / OpenCode / Codex / Trae）、前置扫榜调研入口、滚动建纲双模式、确定性脚本兜底（scripts/）、工程化保护体系。
 >
 > **V1.0**：7步核心流水线 + 4个扩展技能。

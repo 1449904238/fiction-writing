@@ -25,6 +25,7 @@ Detect high-risk AI-flavor prose patterns:
   - em-dash (破折号): blocking
   - period-stutter (碎句号): advisory
   - long-paragraph (长段落): advisory
+  - metaphor-density (比喻密度): advisory/blocking (≥3/千字=advisory, ≥5/千字=blocking)
 
 Report-only. Never rewrites text.`;
 
@@ -37,6 +38,23 @@ const MAX_POSITIVE_SPAN = 80;
 const STUTTER_MIN_RUN = 6;
 const STUTTER_MAX_SENTENCE = 5;
 const LONG_PARAGRAPH_CHARS = 200;
+
+// Metaphor density thresholds (per 1000 characters)
+const METAPHOR_DENSITY_WARN = 3.0;   // ⚠️ 偏高
+const METAPHOR_DENSITY_BLOCK = 5.0;  // ❌ 超标
+const METAPHOR_DENSITY_CRITICAL = 7.0; // ❌❌ 严重超标
+
+// Simile markers — "像"字明喻 + 仿佛/如同/似的/宛若/好似
+const SIMILE_PATTERNS = [
+  /像[^""」』\n]{1,20}一样/g,
+  /像[^""」』\n]{1,20}似的/g,
+  /像[^""」』\n]{1,15}(?:一般|般)/g,
+  /仿佛[^""」』\n]{2,25}/g,
+  /如同[^""」』\n]{2,25}/g,
+  /宛若[^""」』\n]{2,20}/g,
+  /好似[^""」』\n]{2,20}/g,
+  /犹如[^""」』\n]{2,20}/g,
+];
 
 const COMPACT_EITHER_OR_PREV = new Set(['不', '就', '也']);
 const TAG_PARTICLES = new Set(['吗', '吧', '嘛']);
@@ -110,6 +128,7 @@ function scanDocument(input) {
   }
   flushBlock();
   findings.push(...scanProsePatterns(proseLines));
+  findings.push(...scanMetaphorDensity(proseLines));
   findings.sort((a, b) => a.line - b.line || a.column - b.column);
   return findings;
 }
@@ -162,6 +181,64 @@ function findPeriodStutter(proseLines) {
     }
   }
   flush();
+  return findings;
+}
+
+function scanMetaphorDensity(proseLines) {
+  const findings = [];
+  let totalChars = 0;
+  let metaphorCount = 0;
+  const metaphorLocations = [];
+
+  for (const { text, lineNo } of proseLines) {
+    const trimmed = text.trim();
+    if (!trimmed || isDivider(trimmed) || isStructural(trimmed)) continue;
+    // Strip dialogue — metaphors in dialogue are character voice, not narrator AI-flavor
+    const narrative = stripQuoted(trimmed);
+    if (visibleLength(narrative) === 0) continue;
+
+    totalChars += visibleLength(narrative);
+
+    for (const pattern of SIMILE_PATTERNS) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(narrative)) !== null) {
+        metaphorCount += 1;
+        if (metaphorLocations.length < 20) {
+          metaphorLocations.push({ line: lineNo, excerpt: compact(match[0]) });
+        }
+      }
+    }
+  }
+
+  if (totalChars < 200) return findings; // Too short for meaningful density
+
+  const density = (metaphorCount / (totalChars / 1000));
+
+  if (density > METAPHOR_DENSITY_WARN) {
+    const severity = density > METAPHOR_DENSITY_CRITICAL ? 'blocking' :
+                     density > METAPHOR_DENSITY_BLOCK ? 'blocking' : 'advisory';
+    const level = density > METAPHOR_DENSITY_CRITICAL ? '严重超标（比喻轰炸）' :
+                  density > METAPHOR_DENSITY_BLOCK ? '超标' : '偏高';
+    findings.push({
+      line: metaphorLocations[0] ? metaphorLocations[0].line : 1,
+      column: 1,
+      type: 'metaphor-density',
+      severity,
+      message: `比喻密度${level}：${metaphorCount}个比喻 / ${(totalChars / 1000).toFixed(1)}千字 = ${density.toFixed(1)}/千字（人类基准≤3，AI检测红线≤5）。精简装饰性比喻，保留每章≤3个有记忆点的比喻。`,
+      excerpt: `比喻句：${metaphorLocations.slice(0, 5).map(m => m.excerpt).join(' / ')}${metaphorCount > 5 ? ' ...' : ''}`
+    });
+
+    // Also report individual metaphor locations for targeted editing
+    for (const loc of metaphorLocations.slice(0, 10)) {
+      findings.push({
+        line: loc.line, column: 1, type: 'metaphor-instance', severity: 'advisory',
+        message: '比喻句实例（按优先级决定保留/删除）。',
+        excerpt: loc.excerpt
+      });
+    }
+  }
+
   return findings;
 }
 

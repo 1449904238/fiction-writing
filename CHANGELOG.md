@@ -2,6 +2,72 @@
 
 > 本文件记录 novel-full-pipeline 版本变更。遵循语义化版本规范。
 
+## v2.1.0 (2026-06-30)
+
+### oh-story-claudecode 深度对比增量强化（10维度逐一对照，保留本地全部优势）
+
+> 基于 GitHub 仓库 `worldwonderer/oh-story-claudecode`（13 skill/7 Agent/20 脚本/7 Hook）真实源文件深度研读，与本地 V2.0 逐点对照，做增量整合。详见 `oh-story对比分析与改进方案.md`。**本地既有优势（11 Gate/6 素材库/5 检测器/反注水铁律/严肃文学范式/句法强迫）绝对保留。**
+
+#### 05_去AI味精修师 V1.3 → V1.4（点2，整合不减少）
+- **新增「三遍法映射层」**：Pass1去泛化/Pass2去书面化/Pass3回自然感，覆盖11 Gate，与分级执行叠加（不替换11 Gate）
+- **Gate 2 新增「重复语义四类去重」**：形容词/近义词/含义/上下文主语重复
+- **Gate 2 新增「修饰词清扫」**：物品/人物前形容词/定语/副词/指示代词/量词多余即删
+- **新增「收敛终止协议」**：段落级（连续两轮无改动停止）/全文级（3轮上限，第3轮≥10处标`[需复核]`移交）/过度去AI味二次校验
+- **输出格式新增「字数协议」**：原文→修订→净变化%，三遍法执行记录，收敛终止记录
+- **引用新增** `references/改写范例库.md`
+
+#### 06_小说拆文师 V2.0 → V2.1（点3）
+- **新增「对标节奏迁移 M1-M5」**：M1定位锚点→M2换素材→M3校验占比→M4写入卷纲→M5缺失降级，把爆款拆解的一级结构关键点（1/4·中点·3/4）换素材排进卷纲
+- **新增「legacy 拆文库回退规则」**：缺`剧情/情绪模块.md`/`剧情/节奏.md`时的降级路径 + `legacy_deconstruction`/`module_missing`/`rhythm_missing` 标记
+
+#### 03_细纲扩写执行系统 V4.3 → V4.3.1（点1差距）
+- **铁律2 新增「字数欠账定位协议」**：字数<细纲目标90%时，禁止整体注水，对照情节点预算定位被写成带过的密点，一次性重写到各自预算，疏点保持带过
+- **自检清单第2项新增**：字数欠账定位核对
+
+#### 跨平台真正落地（点4，重大缺口补齐）
+- **新建 `.codex/skills/README.md`**：Codex CLI 部署说明（.agents/skills symlink + story_codex_hook.py）
+- **新建 `.codex/hooks/story_codex_hook.py`**：Codex Python hook 适配器（Stop/SessionStart/PreCompact，因 Codex 无 PostToolUse）
+- **新建 `.trae/skills/README.md`**：Trae 部署说明
+- **新建 `.claude/skills/README.md`**：Claude Code 部署说明（PostToolUse 写后兜底）
+- **hooks 补全 5 个 .sh 版本**：session-start/session-end/detect-story-gaps/pre-compact/guard-outline-before-prose（Linux/Mac 对等）
+- **hooks/README.md 重写为 V2.1**：跨平台 hook parity 说明（OpenCode/Claude/Codex/Trae 四端配置示例）
+
+#### 确定性脚本自动化（点7）
+- **新增 `hooks/check-prose-after-write.ps1` + `.sh`**：写后自动兜底 hook（PostToolUse），自动运行 check-ai-patterns + check-degeneration + 字数欠账粗检，blocking 级 exit 2
+- 与 oh-story 的 check-prose-after-write.sh 对齐
+
+#### 语言素材库扩充（点5）
+- **新建 `references/改写范例库.md`**：AI味→自然表达映射表，覆盖情绪直给/动作套路/对话腔调/结尾升华/解释腔/句式套路/重复语义/修饰词清扫8大类。去AI味专用"减法工具"，与本地6大素材库（"加法工具"）分工配合
+
+#### 第8点 4-Agent 并行对抗式审查（⚠️ 未落地，待用户确认）
+- 本地 09 V2.0 已有 full/lean/solo + Findings Schema，但无 agent 定义文件
+- 需新建 4 个 agent 定义（.claude/agents/）+ Phase0 预检 + 继承开放项机制
+- **方案见 `oh-story对比分析与改进方案.md` 第8点，待用户确认后实施**
+
+### 变更文件清单
+| 文件 | 操作 | 版本 |
+|------|------|------|
+| oh-story对比分析与改进方案.md | 新增 | — |
+| 05_去AI味精修师.md | 升级 | V1.3 → V1.4 |
+| 06_小说拆文师.md | 升级 | V2.0 → V2.1 |
+| 03_细纲扩写执行系统.md | 升级 | V4.3 → V4.3.1 |
+| references/改写范例库.md | 新增 | V1.0 |
+| hooks/check-prose-after-write.ps1 | 新增 | — |
+| hooks/check-prose-after-write.sh | 新增 | — |
+| hooks/session-start.sh | 新增 | — |
+| hooks/session-end.sh | 新增 | — |
+| hooks/detect-story-gaps.sh | 新增 | — |
+| hooks/pre-compact.sh | 新增 | — |
+| hooks/guard-outline-before-prose.sh | 新增 | — |
+| hooks/README.md | 重写 | V2.1 |
+| .codex/skills/README.md | 新增 | — |
+| .codex/hooks/story_codex_hook.py | 新增 | — |
+| .trae/skills/README.md | 新增 | — |
+| .claude/skills/README.md | 新增 | — |
+| SKILL.md | 升级 | V2.0 → V2.1 |
+
+---
+
 ## v2.0.0 (2026-06-28)
 
 ### 融合 oh-story-claudecode 工程化体系（10维度全面升级）
