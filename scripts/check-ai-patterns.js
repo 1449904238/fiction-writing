@@ -10,6 +10,9 @@
  *   - em-dash（破折号）: —— / — / -- → blocking（按功能改写，勿一律改句号）
  *   - period-stutter（碎句号）: 连续短叙述句无呼吸 → advisory
  *   - long-paragraph（长段落）: 单段超长，按镜头断段 → advisory
+ *   - sentence-variance（突发度不足）: 句长标准差过低 → advisory（V2.2新增）
+ *   - ai-connector（AI高频连接词）: 然而/此外/与此同时等 → advisory（V2.2新增）
+ *   - emotion-direct（情绪词直给）: 悲伤/愤怒/绝望等 → advisory（V2.2新增）
  * 
  * 用法：node check-ai-patterns.js [--check] [--json] [--fail-on=blocking|all] <file...>
  * 只报告不修改。配合 05_去AI味精修师 的 Post-Step 确定性收尾使用。
@@ -54,6 +57,28 @@ const SIMILE_PATTERNS = [
   /宛若[^""」』\n]{2,20}/g,
   /好似[^""」』\n]{2,20}/g,
   /犹如[^""」』\n]{2,20}/g,
+];
+
+// AI characteristic connector words — 知网AIGC检测"特征词汇检测"维度
+// 来源：知网AIGC检测指南 + GPTZero/Originality.ai交叉验证
+// 这些词在AI生成文本中密度异常高，在人类口语化写作中极少出现
+const AI_CONNECTOR_WORDS = [
+  { pattern: /然而[,，。！？!?]/g, word: '然而', message: 'AI高频连接词：人或人说话不会先说"然而"。改为自然转折或直接删除。' },
+  { pattern: /此外[,，。！？!?]/g, word: '此外', message: 'AI高频连接词：改为自然过渡或直接删除。' },
+  { pattern: /与此同时[,，。！？!?]/g, word: '与此同时', message: 'AI高频连接词：改为动作beat过渡或直接删除。' },
+  { pattern: /值得注意的是[,，。！？!?]/g, word: '值得注意的是', message: 'AI高频连接词：改为具体观察或直接删除。' },
+  { pattern: /综上所述[,，。！？!?]/g, word: '综上所述', message: 'AI高频连接词：网文不需要总结性收束。直接删除。' },
+  { pattern: /不可否认[,，。！？!?]/g, word: '不可否认', message: 'AI高频连接词：改为角色态度或直接删除。' },
+  { pattern: /毋庸置疑[,，。！？!?]/g, word: '毋庸置疑', message: 'AI高频连接词：改为具体物证或直接删除。' },
+  { pattern: /总而言之[,，。！？!?]/g, word: '总而言之', message: 'AI高频连接词：网文不需要总结收束。直接删除。' },
+  { pattern: /换言之[,，。！？!?]/g, word: '换言之', message: 'AI高频连接词：改为自然解释或直接删除。' },
+];
+
+// AI emotion-word list — 情绪工程协议第五章"情绪词残留扫描"
+const AI_EMOTION_WORDS = [
+  '悲伤', '愤怒', '绝望', '心碎', '痛苦', '震惊', '恐惧', '哀伤',
+  '悲凉', '凄凉', '心酸', '心寒', '胆寒', '震撼', '震怒', '狂怒',
+  '悲愤', '哀怨', '忧伤', '惶恐', '惊恐', '惶惑', '焦灼', '焦躁',
 ];
 
 const COMPACT_EITHER_OR_PREV = new Set(['不', '就', '也']);
@@ -129,6 +154,9 @@ function scanDocument(input) {
   flushBlock();
   findings.push(...scanProsePatterns(proseLines));
   findings.push(...scanMetaphorDensity(proseLines));
+  findings.push(...scanAIConnectorWords(proseLines));
+  findings.push(...scanEmotionWords(proseLines));
+  findings.push(...scanSentenceVariance(proseLines));
   findings.sort((a, b) => a.line - b.line || a.column - b.column);
   return findings;
 }
@@ -181,6 +209,76 @@ function findPeriodStutter(proseLines) {
     }
   }
   flush();
+  return findings;
+}
+
+// AI connector word detection — 知网AIGC检测"特征词汇检测"维度
+function scanAIConnectorWords(proseLines) {
+  const findings = [];
+  for (const { text, lineNo } of proseLines) {
+    const trimmed = text.trim();
+    if (!trimmed || isDivider(trimmed) || isStructural(trimmed)) continue;
+    const narrative = stripQuoted(trimmed); // 只检测叙述语，不检测对话
+    for (const { pattern, word, message } of AI_CONNECTOR_WORDS) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(narrative)) !== null) {
+        findings.push({ line: lineNo, column: match.index + 1, type: 'ai-connector', severity: 'advisory',
+          message, excerpt: compact(narrative.slice(Math.max(0, match.index - 6), match.index + word.length + 6)) });
+      }
+    }
+  }
+  return findings;
+}
+
+// Emotion word detection — 情绪工程协议第五章"情绪词残留扫描"
+// 只检测叙述语中的情绪词直给，对话中的情绪词可保留
+function scanEmotionWords(proseLines) {
+  const findings = [];
+  for (const { text, lineNo } of proseLines) {
+    const trimmed = text.trim();
+    if (!trimmed || isDivider(trimmed) || isStructural(trimmed)) continue;
+    const narrative = stripQuoted(trimmed);
+    for (const word of AI_EMOTION_WORDS) {
+      let idx = narrative.indexOf(word);
+      while (idx !== -1) {
+        findings.push({ line: lineNo, column: idx + 1, type: 'emotion-direct', severity: 'advisory',
+          message: `情绪词直给"${word}"：改为情绪锚点（小而具体的物理动作/物件）或五感榨汁机法。见 references/03_情绪工程协议.md。`,
+          excerpt: compact(narrative.slice(Math.max(0, idx - 6), idx + word.length + 6)) });
+        idx = narrative.indexOf(word, idx + word.length);
+      }
+    }
+  }
+  return findings;
+}
+
+// Sentence variance / burstiness detection — 突发度检测（V2.2新增）
+// 对标 GPTZero/知网AIGC检测的 burstiness 维度
+// AI文本句长分布异常均匀（标准差低），人类长短句交替变化剧烈
+function scanSentenceVariance(proseLines) {
+  const findings = [];
+  var allLens = [];
+  for (const { text, lineNo } of proseLines) {
+    const trimmed = text.trim();
+    if (!trimmed || isDivider(trimmed) || isStructural(trimmed)) continue;
+    const narrative = stripQuoted(trimmed);
+    if (visibleLength(narrative) === 0) continue;
+    for (const sentence of splitSentences(narrative)) {
+      var len = visibleLength(sentence);
+      if (len > 0) allLens.push(len);
+    }
+  }
+  if (allLens.length < 8) return findings; // 句子太少不检测
+  var mean = allLens.reduce(function(a, b) { return a + b; }, 0) / allLens.length;
+  var variance = allLens.reduce(function(s, l) { return s + (l - mean) * (l - mean); }, 0) / allLens.length;
+  var stdDev = Math.sqrt(variance);
+  if (stdDev < 8) {
+    findings.push({
+      line: 1, column: 1, type: 'sentence-variance', severity: 'advisory',
+      message: '突发度不足：全章句长标准差=' + stdDev.toFixed(1) + '（<8），句式过于均匀，疑似AI节奏指纹。人类写作长短句交替，标准差通常>15。建议：三短一长交替（3个15字短句+1个40字长句）。',
+      excerpt: '平均句长' + mean.toFixed(1) + '字, 标准差' + stdDev.toFixed(1) + ', 句子数' + allLens.length
+    });
+  }
   return findings;
 }
 
