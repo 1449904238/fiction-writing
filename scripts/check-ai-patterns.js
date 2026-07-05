@@ -157,6 +157,8 @@ function scanDocument(input) {
   findings.push(...scanAIConnectorWords(proseLines));
   findings.push(...scanEmotionWords(proseLines));
   findings.push(...scanSentenceVariance(proseLines));
+  findings.push(...scanNegationParallelism(proseLines));
+  findings.push(...scanImageryRepeat(proseLines));
   findings.sort((a, b) => a.line - b.line || a.column - b.column);
   return findings;
 }
@@ -378,6 +380,122 @@ function findNotIsComparisons(text, getPosition) {
     }
     offset = start + Math.max(raw.length, 2);
   }
+  return findings;
+}
+
+// V2.5新增：否定排比三连检测
+// 检测"没有…没有…没有…" / "不是…不是…不是…" / "并非…并非…并非…" 以及否定排比+升华句
+// 这种句式让所有角色的内心戏听起来一模一样，是AI味"高级感"的核心来源
+function scanNegationParallelism(proseLines) {
+  var findings = [];
+  // 否定排比三连：连续2个以上否定分句构成排比
+  // 匹配：没有…，没有…，没有…  / 不是…，不是…，不是…  / 并非…，并非…，并非…
+  var negationTrioPattern = /(?:没有|不是|并非)[^，。；！？\n]{2,30}[，](?:没有|不是|并非)[^，。；！？\n]{2,30}[，]/g;
+  // 否定排比+升华句：结尾接"而是…"/"只有…"/"那是一种…"
+  var negationSublimationPattern = /(?:没有|不是|并非)[^，。；！？\n]{2,60}[，].*?(?:而是|只有|那是一种|那是|只剩|唯有)/g;
+
+  for (var mi = 0; mi < proseLines.length; mi++) {
+    var m = proseLines[mi];
+    var text = m.text.trim();
+    if (!text || isDivider(text) || isStructural(text)) continue;
+    var narrative = stripQuoted(text);
+    if (visibleLength(narrative) === 0) continue;
+
+    // 检测否定排比三连
+    var match;
+    negationTrioPattern.lastIndex = 0;
+    while ((match = negationTrioPattern.exec(narrative)) !== null) {
+      findings.push({
+        line: m.lineNo, column: match.index + 1, type: 'negation-parallelism', severity: 'blocking',
+        message: '否定排比三连：连续否定分句构成排比（"没有…没有…" / "不是…不是…"），会让所有角色内心戏听起来一模一样。全章容忍度0次。改为：具体动作/场景/对话。',
+        excerpt: compact(match[0])
+      });
+    }
+
+    // 检测否定排比+升华句
+    negationSublimationPattern.lastIndex = 0;
+    while ((match = negationSublimationPattern.exec(narrative)) !== null) {
+      // 避免和上面的trio pattern重复标记
+      var alreadyReported = false;
+      for (var k = 0; k < findings.length; k++) {
+        if (findings[k].line === m.lineNo && findings[k].type === 'negation-parallelism') {
+          alreadyReported = true;
+          break;
+        }
+      }
+      if (!alreadyReported) {
+        findings.push({
+          line: m.lineNo, column: match.index + 1, type: 'negation-parallelism', severity: 'blocking',
+          message: '否定排比+升华句：否定排比结尾接"而是…"/"只有…"/"那是一种…"，AI味"高级感"标志句式。全章容忍度0次。',
+          excerpt: compact(match[0])
+        });
+      }
+    }
+  }
+  return findings;
+}
+
+// V2.5新增：意象/环境/身体反应重复检测
+// 检测同一意象词、同一环境要素、同一身体反应在叙述语中重复≥3次
+function scanImageryRepeat(proseLines) {
+  var findings = [];
+
+  // 常见AI重复意象词（可扩展）
+  var imageryWords = ['阴影', '光', '光斑', '碎片', '雾', '雾气', '铜钱', '灰', '灰尘', '风', '风铃', '钟表', '走针', '裂痕', '裂缝', '碎片', '回声', '倒影', '水纹', '涟漪'];
+  // 常见AI重复身体反应
+  var bodyReactions = ['后脖颈', '发凉', '手心出汗', '手心', '喉咙发紧', '喉结', '指节发白', '指节', '脊背', '头皮发麻', '头皮', '胃里', '太阳穴', '脉搏', '心跳', '呼吸', '屏住呼吸'];
+
+  // 收集叙述语文本
+  var narrativeTexts = [];
+  for (var i = 0; i < proseLines.length; i++) {
+    var line = proseLines[i];
+    var text = line.text.trim();
+    if (!text || isDivider(text) || isStructural(text)) continue;
+    var narrative = stripQuoted(text);
+    if (visibleLength(narrative) === 0) continue;
+    narrativeTexts.push({ text: narrative, lineNo: line.lineNo });
+  }
+
+  // 检测意象重复
+  for (var wi = 0; wi < imageryWords.length; wi++) {
+    var word = imageryWords[wi];
+    var count = 0;
+    var firstLine = -1;
+    for (var ni = 0; ni < narrativeTexts.length; ni++) {
+      if (narrativeTexts[ni].text.indexOf(word) !== -1) {
+        count++;
+        if (firstLine === -1) firstLine = narrativeTexts[ni].lineNo;
+      }
+    }
+    if (count >= 3) {
+      findings.push({
+        line: firstLine, column: 1, type: 'imagery-repeat', severity: 'advisory',
+        message: '意象重复：「' + word + '」在叙述语中出现' + count + '次（≥3），削弱描写力量。保留第1次，第2次换表达，第3次删。',
+        excerpt: '意象"' + word + '"出现' + count + '次'
+      });
+    }
+  }
+
+  // 检测身体反应重复
+  for (var bi = 0; bi < bodyReactions.length; bi++) {
+    var reaction = bodyReactions[bi];
+    var rCount = 0;
+    var rFirstLine = -1;
+    for (var nj = 0; nj < narrativeTexts.length; nj++) {
+      if (narrativeTexts[nj].text.indexOf(reaction) !== -1) {
+        rCount++;
+        if (rFirstLine === -1) rFirstLine = narrativeTexts[nj].lineNo;
+      }
+    }
+    if (rCount >= 3) {
+      findings.push({
+        line: rFirstLine, column: 1, type: 'imagery-repeat', severity: 'advisory',
+        message: '身体反应重复：「' + reaction + '」在叙述语中出现' + rCount + '次（≥3），同一角色最多保留2次，超出换不同的生理反应。',
+        excerpt: '身体反应"' + reaction + '"出现' + rCount + '次'
+      });
+    }
+  }
+
   return findings;
 }
 
