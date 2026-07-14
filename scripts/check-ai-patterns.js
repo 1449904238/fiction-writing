@@ -7,7 +7,7 @@
  * 对标 oh-story-claudecode 的 check-ai-patterns.js，适配本地 11 Gate 体系。
  * 检测 4 类 AI 模式：
  *   - not-is-comparison（否定翻转）: "不是A，而是B" 高频 AI 对比句式 → blocking
- *   - em-dash（破折号）: —— / — / -- → blocking（按功能改写，勿一律改句号）
+ *   - em-dash（破折号）: —— / — / -- → 计数模式：≤4处/章合规，5-7处advisory，≥8处blocking
  *   - period-stutter（碎句号）: 连续短叙述句无呼吸 → advisory
  *   - long-paragraph（长段落）: 单段超长，按镜头断段 → advisory
  *   - sentence-variance（突发度不足）: 句长标准差过低 → advisory（V2.2新增）
@@ -25,7 +25,7 @@ const USAGE = `Usage: node check-ai-patterns.js [--check] [--json] [--fail-on=bl
 
 Detect high-risk AI-flavor prose patterns:
   - not-is-comparison (否定翻转): blocking
-  - em-dash (破折号): blocking
+  - em-dash (破折号): advisory (5-7/章) / blocking (≥8/章)
   - period-stutter (碎句号): advisory
   - long-paragraph (长段落): advisory
   - metaphor-density (比喻密度): advisory/blocking (≥3/千字=advisory, ≥5/千字=blocking)
@@ -153,6 +153,7 @@ function scanDocument(input) {
   }
   flushBlock();
   findings.push(...scanProsePatterns(proseLines));
+  findings.push(...scanEmDashCount(proseLines));
   findings.push(...scanMetaphorDensity(proseLines));
   findings.push(...scanAIConnectorWords(proseLines));
   findings.push(...scanEmotionWords(proseLines));
@@ -168,13 +169,7 @@ function scanProsePatterns(proseLines) {
   for (const { text, lineNo } of proseLines) {
     const trimmed = text.trim();
     if (!trimmed || isDivider(trimmed) || isStructural(trimmed)) continue;
-    const dashPattern = /——|—|--+/g;
-    let dash;
-    while ((dash = dashPattern.exec(text)) !== null) {
-      findings.push({ line: lineNo, column: dash.index + 1, type: 'em-dash', severity: 'blocking',
-        message: '破折号按功能改写：打断→动作beat/短句，拖长音→省略或动作，插入说明→逗号/冒号。',
-        excerpt: compact(text.slice(Math.max(0, dash.index - 8), dash.index + dash[0].length + 8)) });
-    }
+    // em-dash 逐处检测已移除，改为文档级计数模式（见 scanEmDashCount）
     if (trimmed.length > LONG_PARAGRAPH_CHARS) {
       findings.push({ line: lineNo, column: 1, type: 'long-paragraph', severity: 'advisory',
         message: `段落过长（${trimmed.length} 字）：按镜头/新动作/新线索/视线切换断段。`,
@@ -182,6 +177,34 @@ function scanProsePatterns(proseLines) {
     }
   }
   findings.push(...findPeriodStutter(proseLines));
+  return findings;
+}
+
+// em-dash 计数模式：全章统计破折号数量，≤4合规/5-7 advisory/≥8 blocking
+function scanEmDashCount(proseLines) {
+  const findings = [];
+  let dashCount = 0;
+  let firstDashLine = -1;
+  const dashPattern = /——|—|--+/g;
+  for (const { text, lineNo } of proseLines) {
+    const trimmed = text.trim();
+    if (!trimmed || isDivider(trimmed) || isStructural(trimmed)) continue;
+    let dash;
+    dashPattern.lastIndex = 0;
+    while ((dash = dashPattern.exec(text)) !== null) {
+      dashCount++;
+      if (firstDashLine === -1) firstDashLine = lineNo;
+    }
+  }
+  if (dashCount >= 5) {
+    const severity = dashCount >= 8 ? 'blocking' : 'advisory';
+    const level = dashCount >= 8 ? '超标' : '偏高';
+    findings.push({
+      line: firstDashLine, column: 1, type: 'em-dash', severity,
+      message: `破折号数量${level}：全章${dashCount}处（规则限≤4处/章）。${dashCount >= 8 ? '超出过多，需删减至4处以内。' : '接近上限，建议精简至4处以内。'}保留有表达功能的破折号（打断/拖音/插入说明），其余改写。`,
+      excerpt: `破折号共${dashCount}处`
+    });
+  }
   return findings;
 }
 
@@ -436,14 +459,15 @@ function scanNegationParallelism(proseLines) {
 }
 
 // V2.5新增：意象/环境/身体反应重复检测
-// 检测同一意象词、同一环境要素、同一身体反应在叙述语中重复≥3次
+// 检测同一意象词、同一环境要素、同一身体反应在叙述语中重复≥3次(advisory) / ≥5次(blocking)
+// 注意：已移除"光/风/呼吸/心跳"等超高频通用词（4000字中必然出现3+次，误报率极高）
 function scanImageryRepeat(proseLines) {
   var findings = [];
 
-  // 常见AI重复意象词（可扩展）
-  var imageryWords = ['阴影', '光', '光斑', '碎片', '雾', '雾气', '铜钱', '灰', '灰尘', '风', '风铃', '钟表', '走针', '裂痕', '裂缝', '碎片', '回声', '倒影', '水纹', '涟漪'];
-  // 常见AI重复身体反应
-  var bodyReactions = ['后脖颈', '发凉', '手心出汗', '手心', '喉咙发紧', '喉结', '指节发白', '指节', '脊背', '头皮发麻', '头皮', '胃里', '太阳穴', '脉搏', '心跳', '呼吸', '屏住呼吸'];
+  // 特异性意象词（非通用词，出现3+次才有检测意义）
+  var imageryWords = ['阴影', '光斑', '碎片', '铜钱', '灰尘', '风铃', '钟表', '走针', '裂痕', '裂缝', '回声', '倒影', '水纹', '涟漪', '雾气', '余烬', '锈迹', '裂纹', '碎屑', '残影', '波纹', '寒意', '腥味', '霉味', '焦味', '铁锈味', '潮气', '湿气', '暮色', '晨光', '残阳', '冷月', '烛火', '灯影'];
+  // 特异性身体反应（非通用词）
+  var bodyReactions = ['后脖颈', '发凉', '手心出汗', '喉结', '指节发白', '脊背', '头皮发麻', '太阳穴', '脉搏', '屏住呼吸', '瞳孔收缩', '嘴角抽搐', '眼皮跳', '牙关紧咬', '掌心湿润', '后背发凉', '膝盖发软', '手指发抖', '胃部痉挛', '胸口发闷'];
 
   // 收集叙述语文本
   var narrativeTexts = [];
@@ -456,7 +480,7 @@ function scanImageryRepeat(proseLines) {
     narrativeTexts.push({ text: narrative, lineNo: line.lineNo });
   }
 
-  // 检测意象重复
+  // 检测意象重复（≥3 advisory, ≥5 blocking）
   for (var wi = 0; wi < imageryWords.length; wi++) {
     var word = imageryWords[wi];
     var count = 0;
@@ -468,15 +492,16 @@ function scanImageryRepeat(proseLines) {
       }
     }
     if (count >= 3) {
+      var severity = count >= 5 ? 'blocking' : 'advisory';
       findings.push({
-        line: firstLine, column: 1, type: 'imagery-repeat', severity: 'advisory',
-        message: '意象重复：「' + word + '」在叙述语中出现' + count + '次（≥3），削弱描写力量。保留第1次，第2次换表达，第3次删。',
+        line: firstLine, column: 1, type: 'imagery-repeat', severity: severity,
+        message: '意象重复：「' + word + '」在叙述语中出现' + count + '次' + (count >= 5 ? '（≥5，削弱描写力量严重）' : '（≥3）') + '。保留第1次，第2次换表达，第3次起删除或换不同意象。',
         excerpt: '意象"' + word + '"出现' + count + '次'
       });
     }
   }
 
-  // 检测身体反应重复
+  // 检测身体反应重复（≥3 advisory, ≥5 blocking）
   for (var bi = 0; bi < bodyReactions.length; bi++) {
     var reaction = bodyReactions[bi];
     var rCount = 0;
@@ -488,9 +513,10 @@ function scanImageryRepeat(proseLines) {
       }
     }
     if (rCount >= 3) {
+      var rSeverity = rCount >= 5 ? 'blocking' : 'advisory';
       findings.push({
-        line: rFirstLine, column: 1, type: 'imagery-repeat', severity: 'advisory',
-        message: '身体反应重复：「' + reaction + '」在叙述语中出现' + rCount + '次（≥3），同一角色最多保留2次，超出换不同的生理反应。',
+        line: rFirstLine, column: 1, type: 'imagery-repeat', severity: rSeverity,
+        message: '身体反应重复：「' + reaction + '」在叙述语中出现' + rCount + '次' + (rCount >= 5 ? '（≥5，角色生理反应模式化严重）' : '（≥3）') + '。同一角色最多保留2次，超出换不同的生理反应。',
         excerpt: '身体反应"' + reaction + '"出现' + rCount + '次'
       });
     }

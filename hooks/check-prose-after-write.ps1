@@ -30,33 +30,44 @@ if ($fileName -notmatch "第\d+章|正文|chapter") {
 
 $Node = (Get-Command node -ErrorAction SilentlyContinue).Source
 if (-not $Node) {
-    Write-Host "[check-prose-after-write] node 未安装，跳过确定性兜底" -ForegroundColor Yellow
-    exit 0
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host "  ⚠ 警告：未检测到 node.js" -ForegroundColor Yellow
+    Write-Host "  写后质量兜底检测已被跳过！" -ForegroundColor Yellow
+    Write-Host "  请安装 node.js 以启用确定性脚本检测。" -ForegroundColor Yellow
+    Write-Host "  下载：https://nodejs.org/" -ForegroundColor Gray
+    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host ""
+    exit 0  # 放行但不静默——用户需知晓检测被跳过
 }
 
 $blocking = 0
 $advisory = 0
 
-# 1. check-ai-patterns.js
+# 1. check-ai-patterns.js（使用 --fail-on=blocking 退出码判定，非字符串匹配）
 $script1 = Join-Path $ScriptsDir "check-ai-patterns.js"
 if (Test-Path $script1) {
-    $out1 = & $Node $script1 --check $FilePath 2>&1
-    if ($out1 -match "blocking" -or $out1 -match "not-is-comparison" -or $out1 -match "em-dash") {
+    $out1 = & $Node $script1 --check --fail-on=blocking $FilePath 2>&1
+    $exitCode1 = $LASTEXITCODE
+    if ($exitCode1 -eq 1) {
         $blocking++
-        Write-Host "[check-prose-after-write] BLOCKING (ai-patterns): 否定翻转/破折号未清理" -ForegroundColor Red
+        Write-Host "[check-prose-after-write] BLOCKING (ai-patterns): 否定翻转/破折号超标/碎句号/长段落" -ForegroundColor Red
         $out1 | Select-Object -First 5 | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
+    } elseif ($out1) {
+        $advisory++
     }
 }
 
-# 2. check-degeneration.js
+# 2. check-degeneration.js（使用 --fail-on=blocking 退出码判定）
 $script2 = Join-Path $ScriptsDir "check-degeneration.js"
 if (Test-Path $script2) {
-    $out2 = & $Node $script2 --check $FilePath 2>&1
-    if ($out2 -match "blocking") {
+    $out2 = & $Node $script2 --check --fail-on=blocking $FilePath 2>&1
+    $exitCode2 = $LASTEXITCODE
+    if ($exitCode2 -eq 1) {
         $blocking++
         Write-Host "[check-prose-after-write] BLOCKING (degeneration): 逐字复读/截断/工程词泄漏" -ForegroundColor Red
         $out2 | Select-Object -First 5 | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
-    } elseif ($out2 -match "advisory") {
+    } elseif ($out2) {
         $advisory++
     }
 }
@@ -75,9 +86,9 @@ if (Test-Path $script3) {
 # 4. 字数欠账粗检（正文文件）
 $content = Get-Content $FilePath -Raw -Encoding UTF8
 $charCount = ($content -replace '\s', '').Length
-if ($charCount -lt 3000) {
+if ($charCount -lt 3500) {
     $advisory++
-    Write-Host "[check-prose-after-write] ADVISORY: 字数 $charCount < 3000，疑似欠字/截断" -ForegroundColor Yellow
+    Write-Host "[check-prose-after-write] ADVISORY: 字数 $charCount < 3500（规则下限），疑似欠字/截断" -ForegroundColor Yellow
 }
 
 # 汇总
