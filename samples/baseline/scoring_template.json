@@ -1,0 +1,27 @@
+{
+  "chapter": "ch01_战斗章",
+  "generated_at": "",
+  "pipeline": "03a→03b→04→05",
+  "flow_mode": "/flow_full",
+  "scores": {
+    "字数范围": { "score": 0, "max": 10, "method": "check-ai-patterns.js", "note": "3500-4500字=10, ±500内=7, 超出=0" },
+    "对话占比": { "score": 0, "max": 10, "method": "check-ai-patterns.js", "note": "≤60%=10, 60-70%=5, >70%=0" },
+    "burstiness": { "score": 0, "max": 10, "method": "check-ai-patterns.js", "note": ">0.5=10, 0.35-0.5=7, <0.35=0" },
+    "标点限额": { "score": 0, "max": 10, "method": "check-ai-patterns.js", "note": "省略号≤5/破折号≤4/感叹号≤15 全过=10" },
+    "AI味模式": { "score": 0, "max": 10, "method": "check-ai-patterns.js + check-degeneration.js", "note": "无blocking=10, 1-2advisory=7, 有blocking=0" },
+    "跨章重复": { "score": 0, "max": 10, "method": "extract-used-patterns.js", "note": "无重复=10, 1-2处=7, ≥3处=0" },
+    "情绪密度": { "score": 0, "max": 10, "method": "check-emotion-density.js", "note": "5-12/千字=10, 3-5或12-15=7, <3或>15=0" },
+    "情绪多样性": { "score": 0, "max": 10, "method": "check-emotion-density.js", "note": "≥4类=10, 3类=7, <3类=0" },
+    "钩子有效性": { "score": 0, "max": 10, "method": "commercial-agent.md", "note": "强钩子=10, 中=7, 弱/无=0" },
+    "INC要素": { "score": 0, "max": 10, "method": "人工评估", "note": "≥5/13=10, 3-4=7, <3=0" }
+  },
+  "total_score": 0,
+  "max_score": 100,
+  "grade": "",
+  "findings": {
+    "blocking": 0,
+    "advisory": 0,
+    "info": 0
+  },
+  "notes": ""
+}

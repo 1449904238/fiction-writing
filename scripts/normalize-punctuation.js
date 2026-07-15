@@ -22,6 +22,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { hasYamlFrontMatter } = require('./lib/prose-utils.js');
 
 const USAGE = `Usage: node normalize-punctuation.js [--write] [--check] [--quote-mode keep|ascii|yan] <file...>
 
@@ -143,7 +144,7 @@ function normalizePausePunctuation(line, lineNo) {
   return { line: output, findings };
 }
 
-function hasYamlFrontMatter(l) { if(!l[0]||l[0].trim()!=='---')return false;let s=false;for(let i=1;i<Math.min(l.length,40);i++){const t=l[i].trim();if(t==='---')return s;if(/^[A-Za-z0-9_-]+:\s*/.test(t))s=true;}return false; }
+// hasYamlFrontMatter — 已提取至 ./lib/prose-utils.js
 function getPauseType(t) { if (t.startsWith('-')) return 'double-hyphen'; if (t.includes('—')) return 'em-dash'; return 'ellipsis'; }
 
 function choosePauseReplacement(text, start, length) {

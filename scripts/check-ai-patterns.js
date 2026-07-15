@@ -20,6 +20,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { stripQuoted, visibleLength, isDivider, isStructural, hasYamlFrontMatter, splitSentences, parseFenceMarker } = require('./lib/prose-utils.js');
 
 const USAGE = `Usage: node check-ai-patterns.js [--check] [--json] [--fail-on=blocking|all] <file...>
 
@@ -35,7 +36,7 @@ Report-only. Never rewrites text.`;
 const STOP_CHARS = new Set(['。', '！', '？', '!', '?', '\n']);
 const SOFT_SEPARATORS = new Set(['，', ',', '、', '；', ';', '：', ':']);
 const HARD_SEPARATORS = new Set(['。', '.', '！', '!', '？', '?']);
-const MAX_NEGATIVE_SPAN = 80;
+const MAX_NEGATIVE_SPAN = 50;
 const MAX_POSITIVE_SPAN = 80;
 
 const STUTTER_MIN_RUN = 6;
@@ -81,8 +82,25 @@ const AI_EMOTION_WORDS = [
   '悲愤', '哀怨', '忧伤', '惶恐', '惊恐', '惶惑', '焦灼', '焦躁',
 ];
 
+// V2.6新增：叙述语AI味预警词分级检测（与03/04铁律5同步）
+// A级=零容忍(blocking), B级=每章≤2次(advisory), C级=对话豁免(不检测)
+const AI_NARRATIVE_BAN_A = [
+  '意味着', '是因为', '这说明', '他发现', '他心里明白', '他在等',
+  '他意识到', '显然', '可见', '看出规律', '异乎寻常'
+];
+const AI_NARRATIVE_BAN_B = ['觉得', '知道', '看来'];
+const B_LEVEL_LIMIT = 2; // B级词每章允许≤2次
+
 const COMPACT_EITHER_OR_PREV = new Set(['不', '就', '也']);
 const TAG_PARTICLES = new Set(['吗', '吧', '嘛']);
+
+// 反问句前缀：当"不是"前紧跟这些字时，属于反问/推测语气（莫不是/岂不是/别不是），
+// 而非"不是A而是B"的AI对比句式，应排除
+const RHETORICAL_PREFIX = new Set(['莫', '岂', '别']);
+
+// 对话引导字符：当"不是"出现在这些对话标记之后时，可能是对话内合法使用
+const DIALOGUE_OPEN_RE = /[\u201c\u2018\u300c\u300e]/g;  // 左弯引号、左单引号、「、『
+const DIALOGUE_CLOSE_RE = /[\u201d\u2019\u300d\u300f]/g; // 右弯引号、右单引号、」、』
 
 const options = { json: false, files: [], failOn: 'all' };
 
@@ -157,6 +175,7 @@ function scanDocument(input) {
   findings.push(...scanMetaphorDensity(proseLines));
   findings.push(...scanAIConnectorWords(proseLines));
   findings.push(...scanEmotionWords(proseLines));
+  findings.push(...scanNarrativeBanWords(proseLines));
   findings.push(...scanSentenceVariance(proseLines));
   findings.push(...scanNegationParallelism(proseLines));
   findings.push(...scanImageryRepeat(proseLines));
@@ -277,6 +296,58 @@ function scanEmotionWords(proseLines) {
   return findings;
 }
 
+// V2.6新增：叙述语AI味预警词分级扫描（A级blocking, B级计数限流, 对话豁免）
+function scanNarrativeBanWords(proseLines) {
+  var findings = [];
+  var bLevelCounts = {}; // B级词全章计数
+
+  for (var i = 0; i < proseLines.length; i++) {
+    var line = proseLines[i];
+    var text = line.text.trim();
+    if (!text || isDivider(text) || isStructural(text)) continue;
+    var narrative = stripQuoted(text); // C级豁免：只检测叙述语
+
+    // A级词：零容忍，逐处标记blocking
+    for (var ai = 0; ai < AI_NARRATIVE_BAN_A.length; ai++) {
+      var wordA = AI_NARRATIVE_BAN_A[ai];
+      var idxA = narrative.indexOf(wordA);
+      while (idxA !== -1) {
+        findings.push({
+          line: line.lineNo, column: idxA + 1, type: 'narrative-ban-a', severity: 'blocking',
+          message: 'A级违禁词「' + wordA + '」出现在叙述语中（零容忍）。删除并替换为客观物证。',
+          excerpt: compact(narrative.slice(Math.max(0, idxA - 6), idxA + wordA.length + 6))
+        });
+        idxA = narrative.indexOf(wordA, idxA + wordA.length);
+      }
+    }
+
+    // B级词：计数，全章统计后判定
+    for (var bi = 0; bi < AI_NARRATIVE_BAN_B.length; bi++) {
+      var wordB = AI_NARRATIVE_BAN_B[bi];
+      var idxB = narrative.indexOf(wordB);
+      while (idxB !== -1) {
+        if (!bLevelCounts[wordB]) bLevelCounts[wordB] = [];
+        bLevelCounts[wordB].push({ line: line.lineNo, col: idxB + 1, excerpt: compact(narrative.slice(Math.max(0, idxB - 6), idxB + wordB.length + 6)) });
+        idxB = narrative.indexOf(wordB, idxB + wordB.length);
+      }
+    }
+  }
+
+  // B级词全章统计后判定
+  for (var word in bLevelCounts) {
+    var hits = bLevelCounts[word];
+    if (hits.length > B_LEVEL_LIMIT) {
+      findings.push({
+        line: hits[0].line, column: hits[0].col, type: 'narrative-ban-b', severity: 'advisory',
+        message: 'B级预警词「' + word + '」在叙述语中出现' + hits.length + '次（限制≤' + B_LEVEL_LIMIT + '次/章）。超出部分交04精修处理。',
+        excerpt: '全章共' + hits.length + '处'
+      });
+    }
+  }
+
+  return findings;
+}
+
 // Sentence variance / burstiness detection — 突发度检测（V2.2新增）
 // 对标 GPTZero/知网AIGC检测的 burstiness 维度
 // AI文本句长分布异常均匀（标准差低），人类长短句交替变化剧烈
@@ -365,13 +436,19 @@ function scanMetaphorDensity(proseLines) {
   return findings;
 }
 
-function isDivider(t) { return /^-{3,}$/.test(t) || /^[*_]{3,}$/.test(t); }
-function isStructural(t) { return /^(#{1,6}\s|>\s?|[-*+]\s|\d+[.)]\s|\|)/.test(t); }
-function stripQuoted(t) { return t.replace(/「[^」]*」/g,'').replace(/『[^』]*』/g,'').replace(/【[^】]*】/g,'').replace(/"[^"]*"/g,'').replace(/'[^']*'/g,'').replace(/"[^"]*"/g,'').replace(/'[^']*'/g,''); }
-function splitSentences(t) { return t.split(/[。！？!?]/).map(s=>s.trim()).filter(Boolean); }
-function visibleLength(s) { const m = s.match(/[一-鿿Ａ-ｚA-Za-z0-9]/g); return m ? m.length : 0; }
-function parseFenceMarker(t) { const m = /^(?:`{3,}|~{3,})/.exec(t); if (!m) return null; return { char: m[0][0], length: m[0].length }; }
-function hasYamlFrontMatter(lines) { if (!lines[0]||lines[0].trim()!=='---') return false; let s=false; for(let i=1;i<Math.min(lines.length,40);i++){const t=lines[i].trim();if(t==='---')return s;if(/^[A-Za-z0-9_-]+:\s*/.test(t))s=true;} return false; }
+// stripQuoted, visibleLength, isDivider, isStructural, hasYamlFrontMatter,
+// splitSentences, parseFenceMarker — 已提取至 ./lib/prose-utils.js
+
+// 判断指定位置是否在对话引号内（用于"不是…而是…"在对话中的合法使用白名单）
+function isInsideDialogue(text, position) {
+  const before = text.substring(0, position);
+  const opens = (before.match(DIALOGUE_OPEN_RE) || []).length;
+  const closes = (before.match(DIALOGUE_CLOSE_RE) || []).length;
+  if (opens > closes) return true;
+  // ASCII 引号：奇数个 = 在引号内
+  const asciiQuotes = (before.match(/"/g) || []).length;
+  return asciiQuotes % 2 === 1;
+}
 
 function scanBlock(block) {
   const text = block.map(e=>e.text).join('\n');
@@ -392,14 +469,24 @@ function findNotIsComparisons(text, getPosition) {
     const start = text.indexOf('不是', offset);
     if (start === -1) break;
     if (start > 0 && text[start - 1] === '是') { offset = start + 2; continue; }
+    // 排除反问/推测语气：莫不是 / 岂不是 / 别不是
+    if (start > 0 && RHETORICAL_PREFIX.has(text[start - 1])) { offset = start + 2; continue; }
     const candidate = text.slice(start);
     const markerEnd = findPositiveFlipEnd(candidate);
     if (markerEnd === -1) { offset = start + 2; continue; }
     const raw = trimTrailingNoise(extractFinding(candidate, markerEnd));
     if (raw.length >= 4) {
       const position = getPosition(start);
-      findings.push({ line: position.line, column: position.column, type: 'not-is-comparison', severity: 'blocking',
-        message: '高频 AI 对比句式；删掉否定铺垫，直接写后项，或改成动作/细节呈现。', excerpt: compact(raw) });
+      // 对话中合法使用"不是…而是…"时，降为 advisory 并给出白名单提示
+      const inDialogue = isInsideDialogue(text, start);
+      if (inDialogue) {
+        findings.push({ line: position.line, column: position.column, type: 'not-is-comparison', severity: 'advisory',
+          message: '对话中出现"不是…而是…"句式（白名单提示）。对话中可能是角色语言习惯的合法使用，已降为 advisory。如确为角色口语特征可保留，但需确认非叙述语中的 AI 对比句式。',
+          excerpt: compact(raw) });
+      } else {
+        findings.push({ line: position.line, column: position.column, type: 'not-is-comparison', severity: 'blocking',
+          message: '高频 AI 对比句式；删掉否定铺垫，直接写后项，或改成动作/细节呈现。', excerpt: compact(raw) });
+      }
     }
     offset = start + Math.max(raw.length, 2);
   }

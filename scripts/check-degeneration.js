@@ -18,6 +18,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { stripQuoted, visibleLength, hasYamlFrontMatter } = require('./lib/prose-utils.js');
 
 const USAGE = `Usage: node check-degeneration.js [--check] [--json] [--fail-on=blocking|all] <file...>
 
@@ -107,9 +108,7 @@ function scanDocument(input) {
 
 function isContent(t) { return t && !t.startsWith('#') && !/^-{3,}$/.test(t); }
 function isDialogueLike(t) { return /[""'\'「」『』【】]/.test(t); }
-function stripQuoted(t) { return t.replace(/「[^」]*」/g,'').replace(/『[^』]*』/g,'').replace(/【[^】]*】/g,'').replace(/"[^"]*"/g,'').replace(/'[^']*'/g,'').replace(/"[^"]*"/g,'').replace(/'[^']*'/g,''); }
-function visibleLength(t) { const m = t.match(/[一-鿿Ａ-ｚA-Za-z0-9]/g); return m ? m.length : 0; }
-function hasYamlFrontMatter(l) { if(!l[0]||l[0].trim()!=='---')return false;let s=false;for(let i=1;i<Math.min(l.length,40);i++){const t=l[i].trim();if(t==='---')return s;if(/^[A-Za-z0-9_-]+:\s*/.test(t))s=true;}return false; }
+// stripQuoted, visibleLength, hasYamlFrontMatter — 已提取至 ./lib/prose-utils.js
 function compact(t) { const n = t.replace(/\s+/g, ' ').trim(); return n.length > 80 ? `${n.slice(0, 77)}...` : n; }
 
 function findRepetition(content) {

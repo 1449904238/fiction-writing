@@ -1,0 +1,24 @@
+{
+  "version": "V4.0",
+  "last_updated": "2026-07-15",
+  "description": "规则开关清单 — 允许逐条启用/禁用规则，用于A/B测试规则的实际贡献",
+  "rules": [
+    {"id": "R001", "name": "否定排比拦截", "enabled": true, "step": "05", "gate": 1, "description": "检测'不是A是B'类否定排比句式"},
+    {"id": "R002", "name": "破折号复读检测", "enabled": true, "step": "05", "gate": 2, "description": "检测破折号引导句式的跨章复读"},
+    {"id": "R003", "name": "比喻质量三重门", "enabled": true, "step": "04", "description": "比喻不可替代性/具体性/新鲜度三重检测"},
+    {"id": "R004", "name": "情绪锚点密度检查", "enabled": true, "step": "03b", "description": "每章至少1个物理情绪锚点"},
+    {"id": "R005", "name": "解释腔检测", "enabled": true, "step": "05", "gate": 6, "description": "检测过度解释的AI腔调"},
+    {"id": "R006", "name": "套话检测", "enabled": true, "step": "05", "gate": 10, "description": "检测AI高频套语"},
+    {"id": "R007", "name": "跨章句式去重", "enabled": true, "step": "03a", "script": "extract-used-patterns.js", "description": "自动提取近N章已用句式，扩写时避开"},
+    {"id": "R008", "name": "衔接包自动压缩", "enabled": true, "step": "02", "script": "compress-handoff.js", "description": "衔接包链超10章时自动压缩旧包"},
+    {"id": "R009", "name": "burstiness检测", "enabled": true, "step": "03b", "script": "check-ai-patterns.js", "description": "句长变异系数检测，防止节奏均匀"},
+    {"id": "R010", "name": "情绪词密度", "enabled": true, "step": "03b", "script": "check-emotion-density.js", "description": "基于情感词典的情绪词密度检测（待实现）"},
+    {"id": "R011", "name": "角色一致性校验", "enabled": true, "step": "03b", "script": "check-consistency.js", "description": "角色名/状态/数值一致性检测"},
+    {"id": "R012", "name": "节奏波形检测", "enabled": true, "step": "02", "script": "check-rhythm.js", "description": "跨章爽点间隔/节奏塌陷/情绪平坦检测"},
+    {"id": "R013", "name": "退化检测", "enabled": true, "step": "05", "script": "check-degeneration.js", "description": "文本退化模式检测"},
+    {"id": "R014", "name": "标点规范化", "enabled": true, "step": "05", "script": "normalize-punctuation.js", "description": "标点符号限额规范化"},
+    {"id": "R015", "name": "用户情绪锚点", "enabled": true, "step": "02", "description": "用户为每章核心情绪场景提供1个具体锚点"},
+    {"id": "R016", "name": "冲突四件套检查", "enabled": true, "step": "03b", "description": "目标/障碍/路径/代价四件套完整性客观检查"},
+    {"id": "R017", "name": "锐度保护清单", "enabled": true, "step": "04", "description": "03a标记3-5处有特点的表达，04/05不得修改"}
+  ]
+}

@@ -19,6 +19,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { stripQuoted, visibleLength, isDivider, isStructural, hasYamlFrontMatter, splitSentences, parseFenceMarker } = require('./lib/prose-utils.js');
 
 const USAGE = `Usage: node check-rhythm.js [--check] [--json] <file...>
 
@@ -122,13 +123,20 @@ allFindings.sort((a, b) => {
 if (options.json) {
   process.stdout.write(`${JSON.stringify({ findings: allFindings }, null, 2)}\n`);
 } else {
+  // 情绪关键词检测辅助说明
+  const hasEmotionFinding = allFindings.some(f => f.type === 'emotion-flat');
+  if (hasEmotionFinding) {
+    console.log('注：情绪关键词检测为辅助参考，不作为blocking依据。一章可用具体描写表达情绪但通篇不出现关键词。\n');
+  }
   for (const f of allFindings) {
     console.log(`${f.file}:${f.line}:${f.column}: [${f.severity}] ${f.type}: ${f.message} (${f.excerpt})`);
   }
 }
 
 if (failed) process.exit(2);
-if (allFindings.length > 0) process.exit(1);
+// advisory 级别的发现不触发退出码 1，只有 blocking 才阻断
+const hasBlocking = allFindings.some(f => f.severity === 'blocking');
+if (hasBlocking) process.exit(1);
 
 // ========== 工具函数 ==========
 
@@ -140,36 +148,8 @@ function countVisibleChars(text) {
   return m ? m.length : 0;
 }
 
-/** 可见字符长度 */
-function visibleLength(s) {
-  const m = s.match(/[一-鿿Ａ-ｚA-Za-z0-9]/g);
-  return m ? m.length : 0;
-}
-
-/** 去除引号内的对话内容 */
-function stripQuoted(t) {
-  return t.replace(/「[^」]*」/g, '').replace(/『[^』]*』/g, '')
-    .replace(/【[^】]*】/g, '').replace(/"[^"]*"/g, '')
-    .replace(/'[^']*'/g, '').replace(/"[^"]*"/g, '').replace(/'[^']*'/g, '');
-}
-
-/** 分割句子（按句末标点+省略号+换行）*/
-function splitSentences(t) {
-  return t.split(/[。！？!?…\n]+/).map((s) => s.trim()).filter(Boolean);
-}
-
-/** 判断是否为分隔线 */
-function isDivider(t) { return /^-{3,}$/.test(t) || /^[*_]{3,}$/.test(t); }
-
-/** 判断是否为结构性文本（标题、引用、列表等）*/
-function isStructural(t) { return /^(#{1,6}\s|>\s?|[-*+]\s|\d+[.)]\s|\|)/.test(t); }
-
-/** 判断是否为代码块标记 */
-function parseFenceMarker(t) {
-  const m = /^(?:`{3,}|~{3,})/.exec(t);
-  if (!m) return null;
-  return { char: m[0][0], length: m[0].length };
-}
+// visibleLength, stripQuoted, splitSentences, isDivider, isStructural, parseFenceMarker
+// — 已提取至 ./lib/prose-utils.js
 
 /** 检查文本是否包含任一关键词 */
 function containsAny(text, keywords) {
@@ -206,17 +186,7 @@ function stdDev(values) {
   return Math.sqrt(variance);
 }
 
-/** 检测 YAML front matter */
-function hasYamlFrontMatter(lines) {
-  if (!lines[0] || lines[0].trim() !== '---') return false;
-  let s = false;
-  for (let i = 1; i < Math.min(lines.length, 40); i += 1) {
-    const t = lines[i].trim();
-    if (t === '---') return s;
-    if (/^[A-Za-z0-9_-]+:\s*/.test(t)) s = true;
-  }
-  return false;
-}
+// hasYamlFrontMatter — 已提取至 ./lib/prose-utils.js
 
 /** 提取章节正文行（跳过代码块、分隔线、结构性文本、YAML前言）*/
 function extractProseLines(input) {
@@ -327,7 +297,7 @@ function detectEmotionFlat(chapters) {
         line: 1, column: 1,
         type: 'emotion-flat',
         severity: 'advisory',
-        message: `情绪平坦：连续 ${flatLen} 章无情绪波动关键词（爽/怒/惊/悲/惧/暖）。读者情绪无起伏易弃书，建议在区间内加入情绪转折或冲突。`,
+        message: `情绪平坦：连续 ${flatLen} 章无情绪波动关键词（爽/怒/惊/悲/惧/暖）。读者情绪无起伏易弃书，建议在区间内加入情绪转折或冲突。注意：情绪关键词检测为辅助参考，不作为blocking依据。一章可用具体描写表达情绪但通篇不出现关键词。`,
         excerpt: `第${flatStart + 1}-${flatStart + flatLen}章无情绪波动`,
       });
     }

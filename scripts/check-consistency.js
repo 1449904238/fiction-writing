@@ -102,22 +102,34 @@ function parseChineseNumber(str) {
   if (str == null || str === '') return NaN;
   // 纯阿拉伯数字直接返回
   if (/^\d+(\.\d+)?$/.test(str)) return parseFloat(str);
-  let result = 0;
-  let temp = 0;
+
+  // V3.0.1修复：将"万/亿"作为乘法段分隔符，而非与"十/百/千"同级累加
+  // 旧逻辑：万=10000直接加到result，"十万"=10+10000=10010（错误）
+  // 新逻辑：万是段分隔符，"十万"=(0+10)*10000=100000（正确）
+  const SECTION_UNITS = { '万': 10000, '亿': 100000000 };
+  const DIGIT_UNITS = { '十': 10, '百': 100, '千': 1000 };
+  const DIGITS = { '一':1,'二':2,'两':2,'三':3,'四':4,'五':5,
+                   '六':6,'七':7,'八':8,'九':9,'零':0,'半':0.5 };
+
+  let sectionValue = 0;  // 当前段内累积值
+  let tempDigit = 0;     // 当前临时数字
+  let totalValue = 0;    // 已完成段的总值
+
   for (const char of str) {
-    if (CHINESE_NUMS[char] !== undefined) {
-      if (CHINESE_NUMS[char] >= 10) {
-        // 遇到十/百/千/万：将当前 temp 乘以该单位，加到 result
-        temp = (temp || 1) * CHINESE_NUMS[char];
-        result += temp;
-        temp = 0;
-      } else {
-        // 个位数字：暂存到 temp
-        temp = CHINESE_NUMS[char];
-      }
+    if (DIGITS[char] !== undefined) {
+      tempDigit = DIGITS[char];
+    } else if (DIGIT_UNITS[char] !== undefined) {
+      sectionValue += (tempDigit || 1) * DIGIT_UNITS[char];
+      tempDigit = 0;
+    } else if (SECTION_UNITS[char] !== undefined) {
+      sectionValue += tempDigit;
+      totalValue = (totalValue + sectionValue) * SECTION_UNITS[char];
+      sectionValue = 0;
+      tempDigit = 0;
     }
   }
-  return result + temp;
+  sectionValue += tempDigit;
+  return totalValue + sectionValue;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -259,7 +271,7 @@ function buildTierRegex(metadata) {
  */
 function extractNumbers(text, enabledChecks, metadata) {
   const findings = [];
-  const ctx = (idx, raw) => text.substring(Math.max(0, idx - 20), idx + raw.length + 20);
+  const ctx = (idx, raw) => text.substring(Math.max(0, idx - 50), idx + raw.length + 50);
   // 去重集合：避免同一 type+index 被多个模式重复记录
   const seen = new Set();
 
@@ -391,6 +403,73 @@ function extractNumbers(text, enabledChecks, metadata) {
 }
 
 // ════════════════════════════════════════════════════════════
+//  角色名精确匹配 + 别名支持
+// ════════════════════════════════════════════════════════════
+
+/**
+ * 构建角色名全列表（含别名）
+ * 从 metadata.number_anchors.character_numbers 中提取所有角色名及其别名，
+ * 用于精确匹配时排除"张三"误匹配"张三丰"的子串问题。
+ * @param {Object} chars - character_numbers 对象
+ * @returns {string[]} - 所有可能的角色名/别名称列表
+ */
+function buildNameList(chars) {
+  const names = [];
+  for (const [charName, charData] of Object.entries(chars)) {
+    names.push(charName);
+    if (Array.isArray(charData.aliases)) {
+      names.push(...charData.aliases);
+    }
+  }
+  // 按长度降序排列：长名优先匹配，避免短名（张三）误匹配长名（张三丰）的子串
+  names.sort((a, b) => b.length - a.length);
+  return names;
+}
+
+/**
+ * 精确匹配角色名：检查 name 是否在 text 中作为独立角色名出现（非更长名字的子串）
+ * 例如："张三" 不应匹配 "张三丰" 中的子串
+ * @param {string} text - 待搜索文本
+ * @param {string} name - 角色名或别名
+ * @param {string[]} allNames - 所有可能的角色名列表（含别名）
+ * @returns {boolean} - 是否存在精确匹配（独立出现，非更长名的子串）
+ */
+function findExactNameMatch(text, name, allNames) {
+  let idx = 0;
+  while ((idx = text.indexOf(name, idx)) !== -1) {
+    // 检查此匹配是否为更长角色名的一部分
+    let isPartOfLonger = false;
+    for (const otherName of allNames) {
+      if (otherName === name || otherName.length <= name.length) continue;
+      // 如果 otherName 以 name 开头，且文本在此位置匹配完整的 otherName
+      if (otherName.startsWith(name) && text.substring(idx, idx + otherName.length) === otherName) {
+        isPartOfLonger = true;
+        break;
+      }
+    }
+    if (!isPartOfLonger) return true;
+    idx += name.length;
+  }
+  return false;
+}
+
+/**
+ * 根据匹配到的名称（可能是别名）查找对应角色数据
+ * @param {Object} chars - character_numbers 对象
+ * @param {string} name - 匹配到的名称（角色名或别名）
+ * @returns {{name: string, data: Object}|null} - 角色主名和数据，未找到返回 null
+ */
+function findCharDataByName(chars, name) {
+  for (const [charName, charData] of Object.entries(chars)) {
+    if (charName === name) return { name: charName, data: charData };
+    if (Array.isArray(charData.aliases) && charData.aliases.includes(name)) {
+      return { name: charName, data: charData };
+    }
+  }
+  return null;
+}
+
+// ════════════════════════════════════════════════════════════
 //  对照元数据检测矛盾
 // ════════════════════════════════════════════════════════════
 
@@ -410,6 +489,7 @@ function checkConsistency(findings, metadata, enabledChecks) {
 
   const anchors = metadata.number_anchors || {};
   const chars = anchors.character_numbers || {};
+  const allNames = buildNameList(chars); // 角色名+别名列表（按长度降序），用于精确匹配
 
   // ── 语义校验：对所有提取的数值做合理性判断 ──
   for (const f of findings) {
@@ -428,24 +508,30 @@ function checkConsistency(findings, metadata, enabledChecks) {
   if (enabledChecks.includes('age')) {
     const ageFindings = findings.filter(f => f.type === 'age');
     for (const f of ageFindings) {
-      // 尝试匹配角色名
+      // 尝试匹配角色名（精确匹配，支持别名）
       const contextBefore = f.context.substring(0, f.context.indexOf(f.raw));
-      for (const [charName, charData] of Object.entries(chars)) {
-        if (contextBefore.includes(charName) && charData.age) {
-          // 元数据中的年龄也可能是中文数字，统一用 parseChineseNumber 解析
-          const expectedAge = parseChineseNumber(
-            String(charData.age).match(/[\d一二两三四五六七八九十百]+/)?.[0] || '0'
-          );
-          if (expectedAge > 0 && f.value !== expectedAge) {
-            issues.push({
-              severity: 'blocking',
-              type: 'age-mismatch',
-              message: `${charName}的年龄矛盾：正文写"${f.value}岁"，number_anchors标注为"${charData.age}岁"`,
-              location: f.context.trim(),
-              expected: String(charData.age),
-              actual: f.raw,
-            });
-          }
+      const matchedChars = new Set(); // 避免同一角色通过不同别名重复报告
+      for (const name of allNames) {
+        if (!findExactNameMatch(contextBefore, name, allNames)) continue;
+        const charMatch = findCharDataByName(chars, name);
+        if (!charMatch || !charMatch.data.age) continue;
+        if (matchedChars.has(charMatch.name)) continue; // 已通过其他别名匹配过
+        matchedChars.add(charMatch.name);
+        const charName = charMatch.name;
+        const charData = charMatch.data;
+        // 元数据中的年龄也可能是中文数字，统一用 parseChineseNumber 解析
+        const expectedAge = parseChineseNumber(
+          String(charData.age).match(/[\d一二两三四五六七八九十百]+/)?.[0] || '0'
+        );
+        if (expectedAge > 0 && f.value !== expectedAge) {
+          issues.push({
+            severity: 'blocking',
+            type: 'age-mismatch',
+            message: `${charName}的年龄矛盾：正文写"${f.value}岁"，number_anchors标注为"${charData.age}岁"`,
+            location: f.context.trim(),
+            expected: String(charData.age),
+            actual: f.raw,
+          });
         }
       }
     }
@@ -484,21 +570,27 @@ function checkConsistency(findings, metadata, enabledChecks) {
     const cultFindings = findings.filter(f => f.type === 'cultivation');
     for (const f of cultFindings) {
       const contextBefore = f.context.substring(0, f.context.indexOf(f.raw));
-      for (const [charName, charData] of Object.entries(chars)) {
-        if (contextBefore.includes(charName) && charData.cultivation_level) {
-          const expectedNum = parseChineseNumber(
-            String(charData.cultivation_level).match(/[\d一二两三四五六七八九十百]+/)?.[0] || '0'
-          );
-          if (expectedNum > 0 && f.value !== expectedNum) {
-            issues.push({
-              severity: 'blocking',
-              type: 'cultivation-mismatch',
-              message: `${charName}的修炼枚数矛盾：正文写"${f.value}枚"，number_anchors标注为"${charData.cultivation_level}"`,
-              location: f.context.trim(),
-              expected: charData.cultivation_level,
-              actual: f.raw,
-            });
-          }
+      const matchedChars = new Set(); // 避免同一角色通过不同别名重复报告
+      for (const name of allNames) {
+        if (!findExactNameMatch(contextBefore, name, allNames)) continue;
+        const charMatch = findCharDataByName(chars, name);
+        if (!charMatch || !charMatch.data.cultivation_level) continue;
+        if (matchedChars.has(charMatch.name)) continue; // 已通过其他别名匹配过
+        matchedChars.add(charMatch.name);
+        const charName = charMatch.name;
+        const charData = charMatch.data;
+        const expectedNum = parseChineseNumber(
+          String(charData.cultivation_level).match(/[\d一二两三四五六七八九十百]+/)?.[0] || '0'
+        );
+        if (expectedNum > 0 && f.value !== expectedNum) {
+          issues.push({
+            severity: 'blocking',
+            type: 'cultivation-mismatch',
+            message: `${charName}的修炼枚数矛盾：正文写"${f.value}枚"，number_anchors标注为"${charData.cultivation_level}"`,
+            location: f.context.trim(),
+            expected: charData.cultivation_level,
+            actual: f.raw,
+          });
         }
       }
     }
@@ -549,33 +641,53 @@ function checkDeadCharacters(text, metadata, enabledChecks) {
   if (!metadata?.number_anchors?.character_numbers) return issues;
 
   const chars = metadata.number_anchors.character_numbers;
+  const allNames = buildNameList(chars); // 角色名+别名列表，用于精确匹配排除子串
 
   for (const [charName, charData] of Object.entries(chars)) {
     if (charData.status !== '已死亡') continue;
 
-    // 搜索角色名在正文中的所有出现位置
-    const nameRe = new RegExp(charName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-    let match;
-    while ((match = nameRe.exec(text)) !== null) {
-      // 获取上下文（前后100字）
-      const start = Math.max(0, match.index - 100);
-      const end = Math.min(text.length, match.index + charName.length + 100);
-      const context = text.substring(start, end);
+    // 收集该角色的所有名称（主名 + 别名），逐一搜索
+    const namesToSearch = [charName];
+    if (Array.isArray(charData.aliases)) {
+      namesToSearch.push(...charData.aliases);
+    }
 
-      // 检查是否在闪回标记内
-      const isFlashback = /那一年|他想起|回忆|记忆中|多年前|曾经|梦中|幻觉/.test(context);
+    for (const name of namesToSearch) {
+      // 精确匹配：逐个查找 name 出现位置，排除是更长角色名子串的情况
+      let idx = 0;
+      while ((idx = text.indexOf(name, idx)) !== -1) {
+        let isPartOfLonger = false;
+        for (const otherName of allNames) {
+          if (otherName === name || otherName.length <= name.length) continue;
+          if (otherName.startsWith(name) && text.substring(idx, idx + otherName.length) === otherName) {
+            isPartOfLonger = true;
+            break;
+          }
+        }
 
-      if (!isFlashback) {
-        issues.push({
-          severity: 'blocking',
-          type: 'dead-character-alive',
-          message: `已死亡角色"${charName}"（${charData.death_time || '未知时间'}死亡）可能以活人状态出现，且上下文无闪回标记`,
-          location: context.trim().substring(0, 80) + '...',
-          character: charName,
-          expected: '已死亡，仅可在闪回/回忆中出现',
-          actual: '活人状态出现',
-          death_info: charData.death_time + ' ' + (charData.death_cause || ''),
-        });
+        if (!isPartOfLonger) {
+          // 获取上下文（前后100字）
+          const start = Math.max(0, idx - 100);
+          const end = Math.min(text.length, idx + name.length + 100);
+          const context = text.substring(start, end);
+
+          // 检查是否在闪回标记内
+          const isFlashback = /那一年|他想起|回忆|记忆中|多年前|曾经|梦中|幻觉/.test(context);
+
+          if (!isFlashback) {
+            issues.push({
+              severity: 'blocking',
+              type: 'dead-character-alive',
+              message: `已死亡角色"${charName}"（${charData.death_time || '未知时间'}死亡）可能以活人状态出现，且上下文无闪回标记`,
+              location: context.trim().substring(0, 80) + '...',
+              character: charName,
+              expected: '已死亡，仅可在闪回/回忆中出现',
+              actual: '活人状态出现',
+              death_info: charData.death_time + ' ' + (charData.death_cause || ''),
+            });
+          }
+        }
+        idx += name.length;
       }
     }
   }
