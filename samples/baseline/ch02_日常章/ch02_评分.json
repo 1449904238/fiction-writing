@@ -1,0 +1,48 @@
+{
+  "chapter": "ch02_日常章",
+  "chapter_title": "Ch.5 天台夜话",
+  "generated_at": "2026-07-16",
+  "script_version": "V5.3.1",
+  "pipeline": "03a→03b→04→05",
+  "flow_mode": "/flow_full",
+  "scoring_system": "100-point (60 objective + 40 subjective, no 0.8 calibration)",
+  "objective_score": 38,
+  "objective_max": 60,
+  "llm_subjective_score": null,
+  "llm_max_score": 40,
+  "total_score": null,
+  "total_max": 78,
+  "flow_recommendation": "full",
+  "threshold": { "fast": 80, "full": 60, "rewrite": 60 },
+  "objective_details": {
+    "plot_propulsion": { "score": 3, "max": 15, "reasons": ["信息密度过低：均值0.028（<0.03）", "检测到1个低密度段落（密度<0.02）", "信息密度过于均匀（方差0.0001<0.002）"], "details": { "mean_density": 0.0284, "variance": 0.0001, "segment_count": 8, "water_segments": 1 } },
+    "rhythm_control": { "score": 15, "max": 15, "reasons": ["节奏控制优秀：CV=0.68（≥0.5），长短句交替良好"], "details": { "cv": 0.68, "mean_sentence_length": 13.4, "stdDev": 9.1, "sentence_count": 210 } },
+    "texture_density": { "score": 10, "max": 10, "reasons": ["感官描写丰富：覆盖5/5种感官（密度21.3/千字）", "比喻密度合格：0.0/千字（≤3）"], "details": { "sensory_density": 21.3, "sensory_categories": 5, "metaphor_count": 0, "metaphor_density": 0 } },
+    "character_consistency": { "score": 7, "max": 10, "reasons": ["未提供设定JSON或衔接包，给予基准分7分"], "details": { "issues_found": 0, "metadata_used": false } },
+    "ai_baseline": { "score": 3, "max": 10, "reasons": ["检测到5个blocking级问题：narrative-ban-a ×4, em-dash-excess ×1"], "details": { "blocking_count": 5, "issues": [{"type": "narrative-ban-a", "excerpt": "意味着"}, {"type": "narrative-ban-a", "excerpt": "他在等"}, {"type": "narrative-ban-a", "excerpt": "是因为"}, {"type": "narrative-ban-a", "excerpt": "是因为"}, {"type": "em-dash-excess", "excerpt": "破折号22处（≥8）"}] } }
+  },
+  "findings": {
+    "blocking": 10,
+    "advisory": 4,
+    "info": 0
+  },
+  "blocking_issues": [
+    "parallelism-abuse: Gate清单├─结构被误判为排比（元信息干扰）",
+    "em-dash: 破折号22处（限≤4处/章）",
+    "narrative-ban-a: '意味着'出现在叙述语中（零容忍）",
+    "narrative-ban-a: '他在等'出现在叙述语中（零容忍）",
+    "narrative-ban-a: '是因为'×2出现在叙述语中（零容忍）",
+    "not-is-comparison: '不是怕被发现，是怕自己忍不住'",
+    "not-is-comparison: '不是不想说，是说不了'",
+    "not-is-comparison: '不是钥匙碰门框的清脆叮当声'",
+    "not-is-comparison: '不是疑问句，是陈述句'",
+    "not-is-comparison: '不是真的吗，而是你的需求文档写完了吗'"
+  ],
+  "advisory_issues": [
+    "info-density-uniform: 方差0.0001（<0.002）",
+    "dialogue-info-density: 6/19个3轮窗口缺乏信息推进",
+    "narrative-ban-b: '知道'出现9次（限≤2次/章）",
+    "not-is-comparison(对话): '不是不想说，是说不了'（白名单降级）"
+  ],
+  "notes": "V5.3.1真实脚本输出。原手写报告声称93分/0 blocking，实际客观分38/60，10个blocking。'不是…是…'句式在本章高频出现(6处blocking)，部分为角色口语特征可考虑白名单降级。A级违禁词(意味着/他在等/是因为)需在04精修阶段清除。"
+}

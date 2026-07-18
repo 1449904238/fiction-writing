@@ -174,6 +174,8 @@ function normalizeQuotes(line, quoteMode, quoteOpen, lineNo) {
   if (quoteMode === 'keep') return { line, findings: [], quoteOpen };
   const findings = [];
   let output = '';
+  // V5.3修复：用栈深度替代布尔值，支持嵌套引号
+  let depth = quoteOpen ? 1 : 0;
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
     if (quoteMode === 'ascii' && /[「」『』""]/.test(ch)) {
@@ -182,13 +184,45 @@ function normalizeQuotes(line, quoteMode, quoteOpen, lineNo) {
       continue;
     }
     if (quoteMode === 'yan' && (ch === '"' || ch === '\u201c' || ch === '\u201d')) {
-      const replacement = quoteOpen || ch === '\u201d' ? '」' : '「';
+      // V5.3修复：基于栈深度的引号配对，解决嵌套场景下运算符优先级导致的误判
+      // Unicode开引号\u201c（"）总是输出「，闭引号\u201d（"）总是输出」
+      // ASCII双引号"用启发式判断：depth=0时必为开引号；depth>0时检查前一个非空字符
+      let replacement;
+      if (ch === '\u201c') {
+        // 左弯引号 — 总是开引号
+        replacement = '「';
+        depth++;
+      } else if (ch === '\u201d') {
+        // 右弯引号 — 总是闭引号
+        replacement = '」';
+        if (depth > 0) depth--;
+      } else {
+        // ASCII双引号 — 启发式判断
+        if (depth === 0) {
+          replacement = '「';
+          depth++;
+        } else {
+          // 查找前一个非空字符
+          let prevChar = '';
+          for (let j = i - 1; j >= 0; j--) {
+            if (!/\s/.test(line[j])) { prevChar = line[j]; break; }
+          }
+          // 前字符为空/标点/行首 → 开引号；前字符为汉字/字母 → 闭引号
+          if (prevChar === '' || isPunctuation(prevChar) || isOpeningDelimiter(prevChar)) {
+            replacement = '「';
+            depth++;
+          } else {
+            replacement = '」';
+            depth--;
+          }
+        }
+      }
       output += replacement;
-      quoteOpen = replacement === '「';
       findings.push({ line: lineNo, column: i + 1, type: 'quote-style', message: '按 quote-mode 转为盐言引号。' });
       continue;
     }
     output += ch;
   }
-  return { line: output, findings, quoteOpen };
+  // V5.3修复：返回时将depth转回布尔值（depth>0表示有未闭合的引号）
+  return { line: output, findings, quoteOpen: depth > 0 };
 }

@@ -36,6 +36,8 @@ const SKILL_FILES = [
   '00.5_项目初始化.md',
   '00_小说设定架构师.md',
   '01_小说大纲构建师.md',
+  '02a_细纲生成.md',
+  '02b_细纲质检.md',
   '02_细纲编写技能.md',
   '03a_扩写执行.md',
   '03b_质量自检.md',
@@ -164,7 +166,7 @@ function checkInconsistencies(skillVersions, readmeVersions) {
         file: skill.file,
         actual_version: skill.version,
         readme_version: null,
-        severity: 'medium',
+        severity: 'advisory',
       });
     } else if (readmeVer !== skill.version) {
       issues.push({
@@ -172,7 +174,7 @@ function checkInconsistencies(skillVersions, readmeVersions) {
         file: skill.file,
         actual_version: skill.version,
         readme_version: readmeVer,
-        severity: 'high',
+        severity: 'blocking',
         date: skill.date,
       });
     }

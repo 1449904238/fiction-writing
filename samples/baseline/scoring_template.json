@@ -1,27 +1,30 @@
 {
-  "chapter": "ch01_战斗章",
+  "chapter": "chXX_场景章",
+  "chapter_title": "",
   "generated_at": "",
+  "script_version": "V5.3.1",
   "pipeline": "03a→03b→04→05",
   "flow_mode": "/flow_full",
-  "scores": {
-    "字数范围": { "score": 0, "max": 10, "method": "check-ai-patterns.js", "note": "3500-4500字=10, ±500内=7, 超出=0" },
-    "对话占比": { "score": 0, "max": 10, "method": "check-ai-patterns.js", "note": "≤60%=10, 60-70%=5, >70%=0" },
-    "burstiness": { "score": 0, "max": 10, "method": "check-ai-patterns.js", "note": ">0.5=10, 0.35-0.5=7, <0.35=0" },
-    "标点限额": { "score": 0, "max": 10, "method": "check-ai-patterns.js", "note": "省略号≤5/破折号≤4/感叹号≤15 全过=10" },
-    "AI味模式": { "score": 0, "max": 10, "method": "check-ai-patterns.js + check-degeneration.js", "note": "无blocking=10, 1-2advisory=7, 有blocking=0" },
-    "跨章重复": { "score": 0, "max": 10, "method": "extract-used-patterns.js", "note": "无重复=10, 1-2处=7, ≥3处=0" },
-    "情绪密度": { "score": 0, "max": 10, "method": "check-emotion-density.js", "note": "5-12/千字=10, 3-5或12-15=7, <3或>15=0" },
-    "情绪多样性": { "score": 0, "max": 10, "method": "check-emotion-density.js", "note": "≥4类=10, 3类=7, <3类=0" },
-    "钩子有效性": { "score": 0, "max": 10, "method": "commercial-agent.md", "note": "强钩子=10, 中=7, 弱/无=0" },
-    "INC要素": { "score": 0, "max": 10, "method": "人工评估", "note": "≥5/13=10, 3-4=7, <3=0" }
+  "scoring_system": "100-point (60 objective + 40 subjective, no 0.8 calibration)",
+  "objective_score": 0,
+  "objective_max": 60,
+  "llm_subjective_score": null,
+  "llm_max_score": 40,
+  "total_score": null,
+  "total_max": 0,
+  "flow_recommendation": "",
+  "threshold": { "fast": 80, "full": 60, "rewrite": 60 },
+  "objective_details": {
+    "plot_propulsion": { "score": 0, "max": 15, "method": "check-quality-score.js", "note": "信息密度检测，每500字分段计算。均值≥0.03=15分，0.02-0.03=10分，<0.02=5分。方差<0.002扣5分" },
+    "rhythm_control": { "score": 0, "max": 15, "method": "check-quality-score.js", "note": "burstiness CV检测。CV≥0.5=15分，0.35-0.5=10分，<0.35=0分" },
+    "texture_density": { "score": 0, "max": 10, "method": "check-quality-score.js", "note": "五感词频+比喻密度。覆盖≥4种感官=10分，3种=7分，<3种=0分。比喻密度>4/千字=0分" },
+    "character_consistency": { "score": 0, "max": 10, "method": "check-quality-score.js + check-consistency.js", "note": "名称/数值/知识边界矛盾检测。0矛盾=10分，1-2矛盾=7分，≥3矛盾=0分。无设定JSON时基准分7" },
+    "ai_baseline": { "score": 0, "max": 10, "method": "check-ai-patterns.js + check-degeneration.js", "note": "blocking级问题计数。0个=10分，1-2个=7分，≥3个=0分" }
   },
-  "total_score": 0,
-  "max_score": 100,
-  "grade": "",
   "findings": {
     "blocking": 0,
     "advisory": 0,
     "info": 0
   },
-  "notes": ""
+  "notes": "V5.3.1评分模板。客观分由脚本自动计算（60分），主观分由LLM评估后填入（40分）。总分=客观分+主观分，≥80走/fast_fast，60-79走/flow_full，<60重写。"
 }

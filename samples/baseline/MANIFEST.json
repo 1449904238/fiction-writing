@@ -1,0 +1,256 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Baseline Sample Manifest",
+  "description": "V5.4 基线样本清单 — 记录样本文件哈希、脚本版本、检测结果路径，用于回归测试对比基准。V5.4新增ch04-ch09扩展样本（悬疑/言情/转折/过场/边界下限/边界上限）。每次脚本修改后重跑生成新 MANIFEST，通过 regression-baseline.js 自动对比差异。",
+  "version": "V5.4",
+  "generated_at": "2026-07-16T08:30:33.616Z",
+  "generator": "manual + scripts/check-*.js",
+  "pipeline": "03a→03b→04→05",
+  "flow_mode": "/flow_full",
+  "scoring_system": "100-point (60 objective + 40 subjective, no 0.8 calibration)",
+  "samples": [
+    {
+      "id": "ch01",
+      "folder": "ch01_职场章",
+      "original_folder": "ch01_战斗章",
+      "chapter_title": "Ch.3 裁员陷阱",
+      "genre": "都市职场",
+      "validation_focus": "对话/情绪压抑爆发/信息不对称",
+      "final_draft": "samples/baseline/ch01_职场章/ch01_05_终稿.md",
+      "sha256": "68605E13D02215C02F94E382A1DB58F168B5324798BB2F4B71AEC11E2738B8B6",
+      "detection_report": "samples/baseline/ch01_职场章/ch01_检测报告.md",
+      "score_json": "samples/baseline/ch01_职场章/ch01_评分.json",
+      "objective_score": 39,
+      "objective_max": 60,
+      "total_max": 79,
+      "flow_recommendation": "full",
+      "blocking_count": 6,
+      "advisory_count": 4,
+      "info_count": 0,
+      "known_limitations": [
+        "脚本扫描含文件头部元信息(去AI味执行回执)，破折号计数含Gate清单中的├─符号",
+        "情绪锚点'解气'未在正文直接出现(通过情节交付但未用原词)",
+        "信息密度方差极低(0.0001)，各段密度均匀"
+      ]
+    },
+    {
+      "id": "ch02",
+      "folder": "ch02_日常章",
+      "chapter_title": "Ch.5 天台夜话",
+      "genre": "都市日常",
+      "validation_focus": "对话/角色声口/关系推进",
+      "final_draft": "samples/baseline/ch02_日常章/ch02_05_终稿.md",
+      "sha256": "9D7187CEF4133E895F9973DB2243E0056BD15A6917BB8B6CF48A8F5125761F73",
+      "detection_report": "samples/baseline/ch02_日常章/ch02_检测报告.md",
+      "score_json": "samples/baseline/ch02_日常章/ch02_评分.json",
+      "objective_score": 38,
+      "objective_max": 60,
+      "total_max": 78,
+      "flow_recommendation": "full",
+      "blocking_count": 13,
+      "advisory_count": 4,
+      "info_count": 0,
+      "known_limitations": [
+        "A级违禁词'意味着'/'他在等'/'是因为'出现在叙述语中",
+        "'不是…是…'句式高频出现(6处blocking+1处advisory)，部分为角色口语特征",
+        "脚本扫描含文件头部元信息"
+      ]
+    },
+    {
+      "id": "ch03",
+      "folder": "ch03_情绪章",
+      "chapter_title": "Ch.7 钥匙串",
+      "genre": "都市情绪",
+      "validation_focus": "情绪工程/感官描写/潜台词",
+      "final_draft": "samples/baseline/ch03_情绪章/ch03_05_终稿.md",
+      "sha256": "C81839751E3975B072D02C0DAE688EB8E75733117EB0ADB85C7BE776FDB2534A",
+      "detection_report": "samples/baseline/ch03_情绪章/ch03_检测报告.md",
+      "score_json": "samples/baseline/ch03_情绪章/ch03_评分.json",
+      "objective_score": 40,
+      "objective_max": 60,
+      "total_max": 80,
+      "flow_recommendation": "fast",
+      "blocking_count": 8,
+      "advisory_count": 6,
+      "info_count": 0,
+      "known_limitations": [
+        "情绪锚点'心酸'已交付(出现2次)",
+        "A级违禁词'意味着'出现1次",
+        "'不是…是…'句式高频(5处blocking+2处advisory)",
+        "碎句号检测: L153连续8个短句无呼吸"
+      ]
+    },
+    {
+      "chapter": "ch04_悬疑推理章",
+      "type": "悬疑推理",
+      "status": "pending",
+      "validation_targets": ["线索分层释放", "信息差管理", "误导设计", "推理留白"],
+      "key_scripts": ["check-consistency.js --mode=evidence", "check-ai-patterns.js", "check-emotion-density.js"],
+      "hash": null,
+      "objective_score": null,
+      "blocking_count": null,
+      "advisory_count": null,
+      "known_limitations": [
+        "仅验证悬疑题材的线索分层和误导设计，不验证动作描写和爽点密度",
+        "红鲱鱼跨章回收（Ch.9才回收），单独运行此样本时误导设计效果不完整",
+        "check-consistency.js --mode=evidence 证据链模式尚未实现，需用通用模式替代",
+        "推理留白检查为人工评估项，无自动化脚本"
+      ]
+    },
+    {
+      "chapter": "ch05_言情情感章",
+      "type": "言情情感",
+      "status": "pending",
+      "validation_targets": ["情感拉扯", "潜台词对话", "关系推进", "情绪颗粒度"],
+      "key_scripts": ["check-emotion-density.js", "check-ai-patterns.js", "check-rhythm.js", "check-degeneration.js"],
+      "hash": null,
+      "objective_score": null,
+      "blocking_count": null,
+      "advisory_count": null,
+      "known_limitations": [
+        "仅验证言情题材的情感推进和潜台词，不验证爽点和信息密度",
+        "情绪颗粒度检测依赖人工评估，脚本无法自动检测潜台词密度",
+        "Show Don't Tell 检查为人工评估项，无自动化脚本",
+        "情感推进依赖跨章上下文，单独运行时情感弧线效果不完整"
+      ]
+    },
+    {
+      "chapter": "ch06_转折高潮章",
+      "type": "转折高潮",
+      "status": "pending",
+      "validation_targets": ["反转设计", "情绪爆发", "节奏加速", "INC要素密度(每章≥3项)"],
+      "key_scripts": ["check-consistency.js", "check-emotion-density.js", "check-ai-patterns.js", "check-rhythm.js"],
+      "hash": null,
+      "objective_score": null,
+      "blocking_count": null,
+      "advisory_count": null,
+      "known_limitations": [
+        "反转爆发型AI味检测可能产生边界波动，需结合人工评估",
+        "伏笔回收密度高（FS-001/FS-002同章回收），单独运行时伏笔链不完整",
+        "高潮章字数4500在上限边界，burstiness CV可能接近阈值",
+        "情绪锚点'震撼''心酸'需人工验证是否通过情节交付"
+      ]
+    },
+    {
+      "chapter": "ch07_过场过渡章",
+      "type": "过场过渡",
+      "status": "pending",
+      "validation_targets": ["信息传递", "节奏缓冲", "伏笔埋设", "字数下限边界", "INC要素下限(过场章≥2项)"],
+      "key_scripts": ["check-rhythm.js", "check-consistency.js", "check-ai-patterns.js", "check-emotion-density.js"],
+      "hash": null,
+      "objective_score": null,
+      "blocking_count": null,
+      "advisory_count": null,
+      "known_limitations": [
+        "过场章爽点密度低，check-degeneration.js可能触发低密度告警（设计意图）",
+        "信息密度偏低（过场章特征），check-emotion-density.js结果可能低于标准区间",
+        "暗线推进依赖跨章上下文，单独运行时信息差效果不完整",
+        "字数3700在偏低区间，非边界样本但接近下限"
+      ]
+    },
+    {
+      "chapter": "ch08_字数下限章",
+      "type": "字数下限边界",
+      "status": "pending",
+      "validation_targets": ["标点限额边界(省略号≤5/破折号≤4/感叹号≤15)", "对话占比60%边界", "3500字下限"],
+      "key_scripts": ["check-ai-patterns.js", "check-rhythm.js", "normalize-punctuation.js --check", "check-degeneration.js"],
+      "hash": null,
+      "objective_score": null,
+      "blocking_count": null,
+      "advisory_count": null,
+      "known_limitations": [
+        "边界样本：字数3500在下限，评分预期低于标准样本（70-80分）",
+        "标点限额恰好达限（省略号=5/破折号=4/感叹号=15），脚本可能产生边界告警",
+        "对话占比逼近60%上限，check-ai-patterns.js可能触发边界告警",
+        "使用/flow_raw生成，跳过04精修步骤，AI味检测blocking数可能偏高"
+      ]
+    },
+    {
+      "chapter": "ch09_字数上限章",
+      "type": "字数上限边界",
+      "status": "pending",
+      "validation_targets": ["信息密度下限", "节奏控制上限", "4500字上限", "burstiness CV边界"],
+      "key_scripts": ["check-ai-patterns.js", "check-rhythm.js", "check-degeneration.js", "extract-used-patterns.js"],
+      "hash": null,
+      "objective_score": null,
+      "blocking_count": null,
+      "advisory_count": null,
+      "known_limitations": [
+        "边界样本：字数4500在上限，信息密度方差趋近0可能导致check-degeneration.js告警",
+        "使用/flow_raw生成，跳过04精修步骤，AI味检测blocking数可能偏高",
+        "伏笔回收2个+推进1个，高密度章节中的伏笔管理需人工验证",
+        "爽点密度高可能导致burstiness CV接近阈值，需结合人工评估"
+      ]
+    }
+  ],
+  "scripts": [
+    {
+      "name": "check-ai-patterns.js",
+      "path": "scripts/check-ai-patterns.js",
+      "sha256": "14F1665F4FBE4358961AB038AF336B3DB34904FF92E8CDC67C32E3466E2C0D59",
+      "version": "V5.3.1",
+      "changes": "移除scanSentenceVariance(burstiness去重), 新增5个Gate检测函数(transition-stacking/parallelism-abuse/vague-time-jump/cliched-appearance/breathy-dialogue-tags), 阈值统一从prose-utils.js导入"
+    },
+    {
+      "name": "check-quality-score.js",
+      "path": "scripts/check-quality-score.js",
+      "sha256": "4E8768E22ADDE14D5DF324DD224ACBE5BB9D7BFD49E7D71AEABA9E1388A28706",
+      "version": "V5.3.1",
+      "changes": "删除0.8校准因子, 92→100分制(60客观+40主观), 引用arXiv:2511.21140修正"
+    },
+    {
+      "name": "check-emotion-density.js",
+      "path": "scripts/check-emotion-density.js",
+      "sha256": "4D7A76F48ED49B4C2B5E3F20969F045CB9BB6AF18711BC123C0E4CDA20561CDA",
+      "version": "V5.3",
+      "changes": "待修复: 子串匹配误报(痛→头痛/痛快双重计数, REPAIR_TASKLIST任务1)"
+    },
+    {
+      "name": "check-degeneration.js",
+      "path": "scripts/check-degeneration.js",
+      "sha256": "D9A7870085AEFB0B294C68B0358C41C62020B9B7CC60AEE754528C6632AD208E",
+      "version": "V5.3",
+      "changes": "新增meta-leak检测(工程词混入正文)和truncated检测(末尾截断)"
+    },
+    {
+      "name": "check-consistency.js",
+      "path": "scripts/check-consistency.js",
+      "sha256": "A70256412ADA6735BDE565C6AF26E0496F60CBC60CFAF5C9C400E1BA37525F8A",
+      "version": "V5.3",
+      "changes": "距离检查单位过滤(同单位才比对), 路线名绑定, ±10%容差"
+    },
+    {
+      "name": "check-rhythm.js",
+      "path": "scripts/check-rhythm.js",
+      "sha256": "D134602F0227C60B240A6E5BADC01FB113355D51774B057179D0706E3D49D7A8",
+      "version": "V5.3",
+      "changes": "7-2-1篇幅配比检测"
+    },
+    {
+      "name": "normalize-punctuation.js",
+      "path": "scripts/normalize-punctuation.js",
+      "sha256": "BFEF30DD59FAEC9B7674CFAE196E9FB77F917CC200E56462E4E1302D108D2619",
+      "version": "V5.3",
+      "changes": "引号嵌套修复(depth栈替代布尔quoteOpen), --check模式"
+    },
+    {
+      "name": "extract-used-patterns.js",
+      "path": "scripts/extract-used-patterns.js",
+      "sha256": "0D0CFDC813009354861F90C54A132E11AA136F7B0B03A3680AA240D50243D79B",
+      "version": "V5.3.1",
+      "changes": "句式模板提取+跨章n-gram检测"
+    },
+    {
+      "name": "lib/prose-utils.js",
+      "path": "scripts/lib/prose-utils.js",
+      "sha256": "F8D7B2BF6875D1E2EFD1FE7D95A9E524CD14575C8996559067A215B15CD3A270",
+      "version": "V5.3.1",
+      "changes": "修复split()动词统计bug(说→小说/说明误计数), 导出统一阈值常量, 新增segmentChinese()分词器, 新增5个检测函数"
+    }
+  ],
+  "regression_test": {
+    "script": "scripts/regression-baseline.js",
+    "usage": "node scripts/regression-baseline.js [--baseline=MANIFEST.json] [--update]",
+    "description": "对比当前脚本输出与MANIFEST.json中记录的基线结果，报告差异。--update更新基线。"
+  }
+}

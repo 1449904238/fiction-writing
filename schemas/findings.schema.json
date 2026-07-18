@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fiction-writing/schemas/findings.schema.json",
+  "title": "质检报告 Findings (Quality Check Findings)",
+  "description": "质检报告 Findings JSON Schema 定义文件。统一 03a/03b/04/05/09 各步骤及 4 个独立 Agent（story-editor/ai-detector/reader-agent/commercial-agent）的质检问题清单与评分输出格式。基于多 Agent 系统工程实践（JSON 通信比自由文本可靠10倍）。对应 03b_质量自检.md 评分体系与 09_多视角审稿师.md Findings 合并机制。",
+  "type": "object",
+  "required": ["chapter_no", "step", "findings", "score", "timestamp"],
+  "additionalProperties": false,
+  "properties": {
+    "chapter_no": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "章节号，从1开始递增"
+    },
+    "step": {
+      "type": "string",
+      "enum": ["03a", "03b", "04", "05", "09"],
+      "description": "产出步骤。03a=扩写 / 03b=质量自检 / 04=精修 / 05=去AI味 / 09=多视角审稿"
+    },
+    "findings": {
+      "type": "array",
+      "description": "问题清单。按 severity 排序：blocking(必须修复)>advisory(建议修复)>info(提示)。同一位置的多个 Agent findings 合并为一条，标注来源。",
+      "items": {
+        "type": "object",
+        "required": ["severity", "category", "issue"],
+        "additionalProperties": false,
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": ["blocking", "advisory", "info"],
+            "description": "严重程度：blocking=必须修复（阻断放行）/ advisory=建议修复 / info=提示信息"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "可选优先级（1=最高, 3=最低）。与 severity 正交，用于同 severity 内部的处理顺序排序。"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["plot", "character", "prose", "consistency", "commercial", "consistency_audit"],
+            "description": "问题类别：plot=情节 / character=角色 / prose=文笔 / consistency=一致性 / commercial=商业化 / consistency_audit=一致性审计（第5关全书级数值/战力/生死/知识边界抽样检测）"
+          },
+          "location": {
+            "type": "string",
+            "description": "问题位置定位（如 'Ch.5 L23-25' 表示第5章第23-25行，'Ch.5 P3' 表示第3段）"
+          },
+          "evidence": {
+            "type": "string",
+            "description": "原文引用（截取问题所在原文片段，便于定位）"
+          },
+          "issue": {
+            "type": "string",
+            "description": "问题描述（明确说明问题是什么、为什么是问题）",
+            "minLength": 1
+          },
+          "fix": {
+            "type": "string",
+            "description": "修改建议（具体可执行的修复方向）"
+          },
+          "gate": {
+            "type": "string",
+            "description": "Gate 编号。05 去AI味用 G1-G11（如 'G1' 禁用词/'G2' 句式去套路/'G6' 结尾去升华/'G10' 信息含金量）；02b 质检用 O5/O6/O7（如 'O6-G1'）。多 Gate 关联用 '+' 连接（如 'G2+G7'）。"
+          },
+          "source": {
+            "type": "string",
+            "enum": ["editor", "ai-detector", "reader", "commercial", "script", "human"],
+            "description": "问题来源视角。editor=story-editor 编辑视角（质感）/ ai-detector=AI鉴定（去AI味）/ reader=reader-agent 读者视角（代入感）/ commercial=commercial-agent 商业化（卖点）/ script=确定性脚本检测 / human=人工评估。合并来源用 '+' 连接（如 'editor+reader'）。"
+          }
+        }
+      }
+    },
+    "score": {
+      "type": "object",
+      "description": "评分。客观分（脚本检测，0-60）+ 主观分（LLM 评估，0-40，V5.3.1不再×0.8压缩）= 总分（0-100）。",
+      "required": [
+        "objective_score",
+        "objective_details",
+        "flow_recommendation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "objective_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60,
+          "description": "脚本客观分（0-60）。由确定性脚本检测：字数范围/对话占比/burstiness/标点限额/AI味模式/跨章重复/情绪密度/情绪多样性等维度，每维度0-10分，取6个脚本维度合计。"
+        },
+        "objective_details": {
+          "type": "object",
+          "description": "客观分5维度子分明细。由 check-quality-score.js 计算，每维度含 score/max/reasons/details。",
+          "required": [
+            "plot_propulsion",
+            "rhythm_control",
+            "texture_density",
+            "character_consistency",
+            "ai_baseline"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "plot_propulsion": {
+              "type": "object",
+              "description": "情节推进力（满分15分）。信息密度检测，每500字分段计算。",
+              "required": ["score", "max", "reasons", "details"]
+            },
+            "rhythm_control": {
+              "type": "object",
+              "description": "节奏控制（满分15分）。burstiness CV + 句长方差检测。",
+              "required": ["score", "max", "reasons", "details"]
+            },
+            "texture_density": {
+              "type": "object",
+              "description": "质感密度（满分10分）。感官词频统计（五感分类）+ 比喻密度。",
+              "required": ["score", "max", "reasons", "details"]
+            },
+            "character_consistency": {
+              "type": "object",
+              "description": "角色一致性（满分10分）。名称/数值矛盾检测（已死亡角色闪回标记、年龄异常等）。",
+              "required": ["score", "max", "reasons", "details"]
+            },
+            "ai_baseline": {
+              "type": "object",
+              "description": "AI味基线（满分10分）。blocking级问题计数（not-is句式/否定排比/叙述违禁词/破折号超标/比喻密度超标）。",
+              "required": ["score", "max", "reasons", "details"]
+            }
+          }
+        },
+        "llm_subjective_score": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 40,
+          "description": "LLM 主观分（0-40，V5.3.1不再×0.8压缩）。由 LLM 评估：钩子有效性/INC要素/商业化/人工质感等维度，满分40。脚本输出阶段为 null 占位，待 LLM 评估后填入。"
+        },
+        "total_score": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 100,
+          "description": "总分（0-100）。= objective_score + llm_subjective_score。≥80走快速通道(/flow_fast)，60-79走完整流程(/flow_full)，<60返工重写。脚本输出阶段为 null 占位，待 LLM 评估后填入。"
+        },
+        "llm_max_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "LLM 主观分上限（=40，V5.3.1不再×0.8）。用于计算总分上限 total_max = objective_score + llm_max_score。"
+        },
+        "total_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "总分上限（= objective_score + llm_max_score）。当前客观分下可达的最高总分。"
+        },
+        "threshold": {
+          "type": "object",
+          "description": "流程推荐阈值常量。fast=快速通道总分阈值，full=完整流程总分阈值，rewrite=重写阈值（同 full）。",
+          "required": ["fast", "full", "rewrite"],
+          "additionalProperties": false,
+          "properties": {
+            "fast": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "full": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "rewrite": { "type": "integer", "minimum": 0, "maximum": 100 }
+          }
+        },
+        "flow_recommendation": {
+          "type": "string",
+          "enum": ["fast", "full", "rewrite"],
+          "description": "流程推荐：fast=快速通道(≥80分，04b深度打磨) / full=完整流程(60-79分，04精修→05去AI味) / rewrite=返工重写(<60分，退回03a)"
+        }
+      }
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 时间戳（如 '2026-07-15T14:30:00Z'）"
+    }
+  }
+}

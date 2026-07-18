@@ -1,0 +1,254 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fiction-writing/schemas/handoff-package.schema.json",
+  "title": "衔接包 (Handoff Package)",
+  "description": "衔接包 JSON Schema 定义文件。基于多 Agent 系统工程实践（JSON 通信比自由文本可靠10倍）。衔接包是 02a 细纲生成的唯一生产物，03a 扩写系统只能读取，无权修改。P0 字段为强制必填（缺失=02b 质检不通过），P1 字段为可选（缺失=警告但不阻断）。对应 references/04_交接协议.md 与 02a_细纲生成.md Part G。",
+  "type": "object",
+  "required": ["chapter_no", "p0_fields", "version"],
+  "additionalProperties": false,
+  "properties": {
+    "chapter_no": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "章节号，从1开始递增"
+    },
+    "p0_fields": {
+      "type": "object",
+      "description": "P0 必须字段（02a 限 300 字以内）。缺失则 02b 质检不通过。",
+      "required": [
+        "character_states",
+        "forbidden_contradictions",
+        "numerical_locks",
+        "character_knowledge"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "character_states": {
+          "type": "array",
+          "description": "角色状态表。记录本章在场/提及的关键角色的物理状态、心理状态与知识边界。03 扩写时必须严格遵守，不得违反。",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "location",
+              "physical_state",
+              "mental_state",
+              "knowledge_boundary"
+            ],
+            "additionalProperties": true,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "角色名（须与 00 设定 JSON 元数据一致）",
+                "minLength": 1
+              },
+              "location": {
+                "type": "string",
+                "description": "角色当前位置/场景（不在场标注'（不在场）'）"
+              },
+              "physical_state": {
+                "type": "string",
+                "description": "身体状态（伤势/体能/关键持有物等，如'左臂骨折（Ch.7）'）"
+              },
+              "mental_state": {
+                "type": "string",
+                "description": "心理状态（情绪/动机/态度，如'对父亲真相的渴望压倒一切'）"
+              },
+              "knowledge_boundary": {
+                "type": "string",
+                "description": "该角色本章的知识边界简述（已知什么/未知什么）。角色不能说、做不该知道的事。"
+              }
+            }
+          }
+        },
+        "forbidden_contradictions": {
+          "type": "array",
+          "description": "禁止矛盾清单。03 扩写的铁律1，绝对不能违反的内容。如'李四不能双手灵活操作（左臂骨折）'。",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "numerical_locks": {
+          "type": "object",
+          "description": "数值锁定。本章涉及的关键数值（年龄/距离/枚数/境界/物品数量/时间线/生死状态）。03 扩写时数值必须与此一致。",
+          "additionalProperties": {
+            "type": ["string", "number", "integer", "boolean"]
+          }
+        },
+        "character_knowledge": {
+          "type": "object",
+          "description": "角色知识边界映射。key=角色名，value=该角色已知事实列表。用于检测信息差（谁知道了什么、谁还不知道）。与 character_states[].knowledge_boundary 互补——后者为简述，此处为结构化事实清单。",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "p1_fields": {
+      "type": "object",
+      "description": "P1 可选字段（不强制 — 缺失=02b 质检警告但不阻断）。",
+      "additionalProperties": false,
+      "properties": {
+        "previous_chapter_recap": {
+          "type": "string",
+          "description": "前章回顾。上一章核心事件一句话概括 + 结尾状态（角色在哪里、在做什么、情绪如何），100字以内。"
+        },
+        "must_continue_details": {
+          "type": "array",
+          "description": "必须延续的细节。前文提到的、本章必须呼应的细节（如伤势动作受限、环境气味、角色态度等）。",
+          "items": {
+            "type": "string"
+          }
+        },
+        "state_locks": {
+          "type": "object",
+          "description": "状态锁定。本章结束时以下状态必须保持不变（如'李四左臂骨折→第10章前不能康复'）。",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "flashback_markers": {
+          "type": "array",
+          "description": "闪回标注。本章是否包含闪回/回忆/幻觉。每项可含涉及角色、起止标记、闪回原因。",
+          "items": {
+            "type": "object",
+            "required": ["involves_characters"],
+            "additionalProperties": true,
+            "properties": {
+              "involves_characters": {
+                "type": "array",
+                "description": "闪回涉及的角色（含已死亡角色）",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "start_marker": {
+                "type": "string",
+                "description": "闪回起始标记（如'那一年...'）"
+              },
+              "end_marker": {
+                "type": "string",
+                "description": "闪回结束标记（如'沙九没听见。'）"
+              },
+              "reason": {
+                "type": "string",
+                "description": "闪回触发原因"
+              }
+            }
+          }
+        },
+        "new_additions": {
+          "type": "array",
+          "description": "本章新增状态。本章结束后角色/世界的变化（含数值变更标注），供下一章衔接包取用。",
+          "items": {
+            "type": "string"
+          }
+        },
+        "texture_budget": {
+          "type": "object",
+          "description": "质感预算。指导 03 扩写的质感投放（按场景规划感官投放与对话风格）。",
+          "additionalProperties": true,
+          "properties": {
+            "scenes": {
+              "type": "array",
+              "description": "按场景的质感投放规划",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "scene_name": {
+                    "type": "string",
+                    "description": "场景名（如'仓库对话'）"
+                  },
+                  "texture_type": {
+                    "type": "string",
+                    "description": "质感类型（如'紧张质感'/'情绪爆发'/'余韵质感'）"
+                  },
+                  "sensory_anchors": {
+                    "type": "string",
+                    "description": "感官投放锚点（如'霉味+雨声铁皮屋顶'）"
+                  },
+                  "dialogue_style": {
+                    "type": "string",
+                    "description": "对话风格（如'压抑型：短句+不回答问题'）"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "cross_chapter_dedup": {
+          "type": "array",
+          "description": "跨章去重清单。为 03 跨章去重协议提供数据（由 extract-used-patterns.js 自动生成，手动维护时可跳过）。包含近3章已用句式模板、近5章同类场景元素、章末收尾方式记录等。",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "去重项类型（如'sentence_pattern'/'scene_element'/'chapter_ending'）"
+              },
+              "chapter_ref": {
+                "type": "string",
+                "description": "关联章节（如'Ch.7'）"
+              },
+              "content": {
+                "type": "string",
+                "description": "去重内容描述"
+              }
+            }
+          }
+        }
+      }
+    },
+    "foreshadowing": {
+      "type": "array",
+      "description": "伏笔追踪表。记录本章涉及的所有伏笔及其生命周期状态。",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "plant_chapter", "content", "planned_harvest", "current_status"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "伏笔唯一标识（如'FS-001'）",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "伏笔名称/简述",
+            "minLength": 1
+          },
+          "plant_chapter": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "埋设章节号"
+          },
+          "content": {
+            "type": "string",
+            "description": "伏笔具体内容",
+            "minLength": 1
+          },
+          "planned_harvest": {
+            "type": "string",
+            "description": "计划回收方式/章节（如'第15章揭露真相'）"
+          },
+          "current_status": {
+            "type": "string",
+            "enum": ["planted", "active", "reinforced", "harvested", "abandoned"],
+            "description": "当前状态：planted=已埋设 / active=活跃未回收 / reinforced=已强化铺垫 / harvested=已回收 / abandoned=已废弃"
+          }
+        }
+      }
+    },
+    "version": {
+      "type": "string",
+      "description": "Schema 版本号（如'5.2.0'）",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    }
+  }
+}

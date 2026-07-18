@@ -1,6 +1,6 @@
 # Hooks 使用指南
 
-> V2.2 — 跨平台 hook parity + 写后自动兜底 + 跨章节奏检测。对标 oh-story-claudecode 的三端 hook 一致性（.sh/.ps1/.py）。
+> V6.0 — post-chapter-update 集成规则执行遥测+HTML进度面板。V2.2 — 跨平台 hook parity + 写后自动兜底 + 跨章节奏检测。
 > 本地提供 **8 个 hook × 2 格式（.ps1 Windows / .sh Linux-Mac）+ 1 个 Codex Python 适配器**，零漂移覆盖 OpenCode/Claude Code/Codex/Trae 四端。
 
 ## Hook 清单（8 个）
@@ -15,6 +15,7 @@
 | `check-prose-after-write.ps1/.sh` | **写后兜底**（v2.1新增） ⭐**推荐默认启用** | 正文落盘后（PostToolUse） | 自动运行3个确定性脚本，报告 blocking 级 finding（截断/复读/工程词/否定翻转/字数欠账） |
 | `check-rhythm-cross-chapter.ps1/.sh` | **跨章节奏**（v2.2新增） | 每5章完成时 | 自动收集最近5章，调用check-rhythm.js检测爽点间隔/节奏塌陷/情绪平坦，报告写入`追踪/节奏检测_第N-M章.md` |
 | `chapter-counter.ps1/.sh` | 信息型 | session-start（会话启动时） | 扫描正文目录统计已完成章节数，每3章提醒审稿/补纲，每10章提醒衔接包归档/伏笔检查，输出进度看板 |
+| `post-chapter-update.ps1/.sh` | **写后更新**（v2.1新增, V6.0增强） | 每章终稿后 | 更新上下文模板+生成断点快照+**规则执行遥测(V6.0)+HTML进度面板(V6.0)** |
 
 > Codex 端用 `.codex/hooks/story_codex_hook.py`（Python 适配器，因 Codex 无 PostToolUse，改用 Stop 触发）。
 > `chapter-counter` 为纯 shell 脚本，无外部依赖，可被 session-start 调用或独立运行。

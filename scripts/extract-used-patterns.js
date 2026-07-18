@@ -386,7 +386,7 @@ function detectOpenerDuplicates(allOpeners) {
           chapter_a: allOpeners[i].file,
           chapter_b: allOpeners[j].file,
           shared_ngrams: intersection,
-          severity: intersection.length >= 5 ? 'high' : 'medium',
+          severity: intersection.length >= 5 ? 'blocking' : 'advisory',
         });
       }
     }

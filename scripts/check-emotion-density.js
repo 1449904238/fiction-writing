@@ -79,6 +79,117 @@ for (const [cat, data] of Object.entries(EMOTION_CATEGORIES)) {
 }
 
 // ============================================================
+// 排除搭配表：含情绪字但非情绪表达的常见复合词
+// 在 Trie 中标记 $exclude=true，FMM 匹配后跳过不计数
+// ============================================================
+
+const EMOTION_EXCLUDE_COMPOUNDS = [
+  // 痛：身体疼痛/非情绪表达
+  '头痛', '痛点', '痛风', '痛经',
+  // 苦：辛苦/劳苦
+  '刻苦', '苦力', '苦水', '苦心', '苦工', '苦于',
+  // 伤：伤害/伤口
+  '伤亡', '伤口', '伤害', '伤势', '伤员', '伤身',
+  // 怕：哪怕/怕生
+  '哪怕', '怕生',
+  // 酸：身体酸软（非情绪）
+  '酸软', '酸痛',
+  // 暖：暖和/暖流（非情绪表达）
+  '暖和', '暖流',
+];
+
+// ============================================================
+// Trie 树 + 正向最大匹配（FMM）
+// 解决 indexOf 子串匹配导致的重复计数与误匹配
+// ============================================================
+
+/**
+ * 从 EMOTION_CATEGORIES 构建情绪词 Trie 树
+ * 同时插入排除搭配词（标记 $exclude=true）
+ * 排除词不覆盖已存在的情绪词
+ * @returns {Object} Trie 根节点
+ */
+function buildEmotionTrie() {
+  const trie = {};
+  // 插入情绪词
+  for (const [category, data] of Object.entries(EMOTION_CATEGORIES)) {
+    for (const word of data.words) {
+      let node = trie;
+      for (const char of word) {
+        if (!node[char]) node[char] = {};
+        node = node[char];
+      }
+      node.$word = word;
+      node.$category = category;
+      node.$exclude = false;
+    }
+  }
+  // 插入排除搭配词（不覆盖已存在的情绪词）
+  for (const word of EMOTION_EXCLUDE_COMPOUNDS) {
+    let node = trie;
+    for (const char of word) {
+      if (!node[char]) node[char] = {};
+      node = node[char];
+    }
+    if (!node.$word) {
+      node.$word = word;
+      node.$exclude = true;
+    }
+  }
+  return trie;
+}
+
+/**
+ * 正向最大匹配（FMM）提取情绪词
+ * 从每个位置尝试最长匹配，匹配成功后跳过已匹配字符
+ * 排除词（$exclude=true）跳过不计数但消耗字符
+ * @param {string} text - 待扫描文本
+ * @param {Object} trie - buildEmotionTrie 返回的 Trie 根节点
+ * @returns {Array<{word: string, category: string, position: number}>}
+ */
+function extractEmotionWordsFMM(text, trie) {
+  const results = [];
+  let i = 0;
+  while (i < text.length) {
+    // 从位置 i 开始，尝试最长匹配
+    let node = trie;
+    let bestMatch = null;   // { word, category, exclude, length }
+    let depth = 0;
+    for (let j = i; j < text.length; j++) {
+      const char = text[j];
+      if (!node[char]) break;
+      node = node[char];
+      depth++;
+      if (node.$word) {
+        bestMatch = {
+          word: node.$word,
+          category: node.$category,
+          exclude: node.$exclude === true,
+          length: depth,
+        };
+      }
+    }
+    if (bestMatch) {
+      if (!bestMatch.exclude) {
+        results.push({
+          word: bestMatch.word,
+          category: bestMatch.category,
+          position: i,
+        });
+      }
+      // 无论是否排除，都跳过已匹配字符
+      i += bestMatch.length;
+    } else {
+      i += 1;
+    }
+  }
+  return results;
+}
+
+// 模块级 Trie（构建一次，多次复用）
+const EMOTION_TRIE = buildEmotionTrie();
+
+// ============================================================
 // 情绪密度阈值
 // ============================================================
 
@@ -129,18 +240,11 @@ function analyzeEmotion(text, anchor) {
     { name: 'end', text: cleanText.substring(third * 2) }
   ];
 
-  // 扫描全文情绪词
-  let allEmotionWords = [];
+  // 扫描全文情绪词（Trie + FMM，避免子串重复匹配与误匹配）
+  const allEmotionWords = extractEmotionWordsFMM(cleanText, EMOTION_TRIE);
 
-  for (const [category, data] of Object.entries(EMOTION_CATEGORIES)) {
-    for (const word of data.words) {
-      let idx = 0;
-      while ((idx = cleanText.indexOf(word, idx)) !== -1) {
-        allEmotionWords.push({ word, category, position: idx });
-        results.word_frequency[word] = (results.word_frequency[word] || 0) + 1;
-        idx += word.length;
-      }
-    }
+  for (const ew of allEmotionWords) {
+    results.word_frequency[ew.word] = (results.word_frequency[ew.word] || 0) + 1;
   }
 
   results.total_emotion_words = allEmotionWords.length;
@@ -151,20 +255,11 @@ function analyzeEmotion(text, anchor) {
     results.categories_found[ew.category] = (results.categories_found[ew.category] || 0) + 1;
   }
 
-  // 曲线分析
+  // 曲线分析（FMM 分段提取，与全文扫描一致）
   for (const seg of segments) {
-    for (const [category, data] of Object.entries(EMOTION_CATEGORIES)) {
-      for (const word of data.words) {
-        let count = 0;
-        let idx = 0;
-        while ((idx = seg.text.indexOf(word, idx)) !== -1) {
-          count++;
-          idx += word.length;
-        }
-        if (count > 0) {
-          results.curve[seg.name][category] = (results.curve[seg.name][category] || 0) + count;
-        }
-      }
+    const segWords = extractEmotionWordsFMM(seg.text, EMOTION_TRIE);
+    for (const ew of segWords) {
+      results.curve[seg.name][ew.category] = (results.curve[seg.name][ew.category] || 0) + 1;
     }
   }
 

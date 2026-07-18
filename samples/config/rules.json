@@ -1,24 +1,222 @@
 {
-  "version": "V4.0",
-  "last_updated": "2026-07-15",
-  "description": "规则开关清单 — 允许逐条启用/禁用规则，用于A/B测试规则的实际贡献",
+  "version": "V6.0",
+  "last_updated": "2026-07-18",
+  "description": "规则开关清单 — 允许逐条启用/禁用规则，用于A/B测试规则的实际贡献。V6.0更新：新增severity字段（hard/soft/adaptive三档分级）、rule_version/changelog字段（per-rule版本化）、rule_lock支持（项目级规则锁定）。V5.3更新：新增R018-R024共7条规则，修正R010状态。",
+  "rule_lock_doc": "项目级规则锁定：在novel_meta.json中设置 rule_lock: true 可锁定创建时的规则版本，不受后续规则更新影响。rule_lock: false（默认）跟随最新规则。迁移时运行 scripts/migrate-rules.js 检查受影响规则。",
+  "severity_doc": {
+    "hard": "硬规则：事实性/一致性/结构性规则，脚本强制校验，违反=阻断输出。不允许LLM自行判断。",
+    "soft": "软规则：风格性/节奏性规则，脚本报告但不阻断，LLM可自行判断是否调整。>阈值时提示建议。",
+    "adaptive": "自适应规则：密度性/比例性规则，根据章节类型（核心/重要/过场/点缀）自动调整阈值。"
+  },
   "rules": [
-    {"id": "R001", "name": "否定排比拦截", "enabled": true, "step": "05", "gate": 1, "description": "检测'不是A是B'类否定排比句式"},
-    {"id": "R002", "name": "破折号复读检测", "enabled": true, "step": "05", "gate": 2, "description": "检测破折号引导句式的跨章复读"},
-    {"id": "R003", "name": "比喻质量三重门", "enabled": true, "step": "04", "description": "比喻不可替代性/具体性/新鲜度三重检测"},
-    {"id": "R004", "name": "情绪锚点密度检查", "enabled": true, "step": "03b", "description": "每章至少1个物理情绪锚点"},
-    {"id": "R005", "name": "解释腔检测", "enabled": true, "step": "05", "gate": 6, "description": "检测过度解释的AI腔调"},
-    {"id": "R006", "name": "套话检测", "enabled": true, "step": "05", "gate": 10, "description": "检测AI高频套语"},
-    {"id": "R007", "name": "跨章句式去重", "enabled": true, "step": "03a", "script": "extract-used-patterns.js", "description": "自动提取近N章已用句式，扩写时避开"},
-    {"id": "R008", "name": "衔接包自动压缩", "enabled": true, "step": "02", "script": "compress-handoff.js", "description": "衔接包链超10章时自动压缩旧包"},
-    {"id": "R009", "name": "burstiness检测", "enabled": true, "step": "03b", "script": "check-ai-patterns.js", "description": "句长变异系数检测，防止节奏均匀"},
-    {"id": "R010", "name": "情绪词密度", "enabled": true, "step": "03b", "script": "check-emotion-density.js", "description": "基于情感词典的情绪词密度检测（待实现）"},
-    {"id": "R011", "name": "角色一致性校验", "enabled": true, "step": "03b", "script": "check-consistency.js", "description": "角色名/状态/数值一致性检测"},
-    {"id": "R012", "name": "节奏波形检测", "enabled": true, "step": "02", "script": "check-rhythm.js", "description": "跨章爽点间隔/节奏塌陷/情绪平坦检测"},
-    {"id": "R013", "name": "退化检测", "enabled": true, "step": "05", "script": "check-degeneration.js", "description": "文本退化模式检测"},
-    {"id": "R014", "name": "标点规范化", "enabled": true, "step": "05", "script": "normalize-punctuation.js", "description": "标点符号限额规范化"},
-    {"id": "R015", "name": "用户情绪锚点", "enabled": true, "step": "02", "description": "用户为每章核心情绪场景提供1个具体锚点"},
-    {"id": "R016", "name": "冲突四件套检查", "enabled": true, "step": "03b", "description": "目标/障碍/路径/代价四件套完整性客观检查"},
-    {"id": "R017", "name": "锐度保护清单", "enabled": true, "step": "04", "description": "03a标记3-5处有特点的表达，04/05不得修改"}
+    {
+      "id": "R001", "name": "否定排比拦截", "enabled": true, "severity": "soft",
+      "step": "05", "gate": 1,
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-01", "change": "初始版本"}],
+      "description": "检测'不是A是B'类否定排比句式"
+    },
+    {
+      "id": "R002", "name": "破折号复读检测", "enabled": true, "severity": "soft",
+      "step": "05", "gate": 2,
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-01", "change": "初始版本"}],
+      "description": "检测破折号引导句式的跨章复读"
+    },
+    {
+      "id": "R003", "name": "比喻质量三重门", "enabled": true, "severity": "adaptive",
+      "step": "04",
+      "rule_version": "2.0", "deprecated": false,
+      "changelog": [
+        {"version": "1.0", "date": "2026-06-01", "change": "初始版本，固定配额5个"},
+        {"version": "2.0", "date": "2026-07-18", "change": "V6.0改为adaptive：核心章3-5个、过场章1-2个、情绪沉淀章0-3个"}
+      ],
+      "adaptive_thresholds": {"core": "3-5", "important": "2-4", "transitional": "1-2", "accent": "0-3"},
+      "description": "比喻不可替代性/具体性/新鲜度三重检测"
+    },
+    {
+      "id": "R004", "name": "情绪锚点密度检查", "enabled": true, "severity": "hard",
+      "step": "03b",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-01", "change": "初始版本"}],
+      "description": "每章至少1个物理情绪锚点"
+    },
+    {
+      "id": "R005", "name": "解释腔检测", "enabled": true, "severity": "soft",
+      "step": "05", "gate": 6,
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-01", "change": "初始版本"}],
+      "description": "检测过度解释的AI腔调"
+    },
+    {
+      "id": "R006", "name": "套话检测", "enabled": true, "severity": "soft",
+      "step": "05", "gate": 10,
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-01", "change": "初始版本"}],
+      "description": "检测AI高频套语"
+    },
+    {
+      "id": "R007", "name": "跨章句式去重", "enabled": true, "severity": "soft",
+      "step": "03a", "script": "extract-used-patterns.js",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-01", "change": "初始版本"}],
+      "description": "自动提取近N章已用句式，扩写时避开"
+    },
+    {
+      "id": "R008", "name": "衔接包自动压缩", "enabled": true, "severity": "hard",
+      "step": "02", "script": "compress-handoff.js",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-01", "change": "初始版本"}],
+      "description": "衔接包链超10章时自动压缩旧包"
+    },
+    {
+      "id": "R009", "name": "burstiness检测", "enabled": true, "severity": "adaptive",
+      "step": "03b", "script": "check-ai-patterns.js",
+      "rule_version": "2.0", "deprecated": false,
+      "changelog": [
+        {"version": "1.0", "date": "2026-06-15", "change": "V5.3新增检测器，固定阈值CV≥0.3"},
+        {"version": "2.0", "date": "2026-07-18", "change": "V6.0改为adaptive：核心章CV≥0.35、过场章CV≥0.25"}
+      ],
+      "adaptive_thresholds": {"core": 0.35, "important": 0.30, "transitional": 0.25, "accent": 0.25},
+      "description": "句长变异系数检测，防止节奏均匀（V5.3新增检测器）"
+    },
+    {
+      "id": "R010", "name": "情绪词密度", "enabled": true, "severity": "adaptive",
+      "step": "03b", "script": "check-emotion-density.js",
+      "rule_version": "2.0", "deprecated": false,
+      "changelog": [
+        {"version": "1.0", "date": "2026-06-01", "change": "初始版本，固定阈值"},
+        {"version": "2.0", "date": "2026-07-18", "change": "V6.0改为adaptive：核心章密度更高、过场章可降低"}
+      ],
+      "description": "基于情感词典的情绪词密度检测（已实现）"
+    },
+    {
+      "id": "R011", "name": "角色一致性校验", "enabled": true, "severity": "hard",
+      "step": "03b", "script": "check-consistency.js",
+      "rule_version": "2.0", "deprecated": false,
+      "changelog": [
+        {"version": "1.0", "date": "2026-06-01", "change": "初始版本"},
+        {"version": "2.0", "date": "2026-06-20", "change": "V5.3修复误报"}
+      ],
+      "description": "角色名/状态/数值一致性检测（V5.3修复误报）"
+    },
+    {
+      "id": "R012", "name": "节奏波形检测", "enabled": true, "severity": "soft",
+      "step": "02", "script": "check-rhythm.js",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-01", "change": "初始版本"}],
+      "description": "跨章爽点间隔/节奏塌陷/情绪平坦检测"
+    },
+    {
+      "id": "R013", "name": "退化检测", "enabled": true, "severity": "soft",
+      "step": "05", "script": "check-degeneration.js",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-01", "change": "初始版本"}],
+      "description": "文本退化模式检测"
+    },
+    {
+      "id": "R014", "name": "标点规范化", "enabled": true, "severity": "adaptive",
+      "step": "05", "script": "normalize-punctuation.js",
+      "rule_version": "2.0", "deprecated": false,
+      "changelog": [
+        {"version": "1.0", "date": "2026-06-01", "change": "初始版本，固定限额：省略号≤5/破折号≤4/感叹号≤15"},
+        {"version": "2.0", "date": "2026-07-18", "change": "V6.0改为adaptive：核心章可放宽20%、过场章收紧20%。对话密集型章节（谈判/对峙）对话比例可放宽至70%"}
+      ],
+      "adaptive_thresholds": {
+        "punctuation": {"省略号": {"core": 6, "important": 5, "transitional": 4, "accent": 3}, "破折号": {"core": 5, "important": 4, "transitional": 3, "accent": 2}, "感叹号": {"core": 18, "important": 15, "transitional": 12, "accent": 10}},
+        "dialogue_ratio": {"default": 0.60, "dialogue_heavy_chapter": 0.70}
+      },
+      "description": "标点符号限额规范化"
+    },
+    {
+      "id": "R015", "name": "用户情绪锚点", "enabled": true, "severity": "hard",
+      "step": "02",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-01", "change": "初始版本"}],
+      "description": "用户为每章核心情绪场景提供1个具体锚点"
+    },
+    {
+      "id": "R016", "name": "冲突四件套检查", "enabled": true, "severity": "hard",
+      "step": "03b",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-01", "change": "初始版本"}],
+      "description": "目标/障碍/路径/代价四件套完整性客观检查"
+    },
+    {
+      "id": "R017", "name": "锐度保护清单", "enabled": true, "severity": "hard",
+      "step": "04",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-01", "change": "初始版本"}],
+      "description": "03a标记3-5处有特点的表达，04/05不得修改"
+    },
+    {
+      "id": "R018", "name": "TTR词汇多样性检测", "enabled": true, "severity": "adaptive",
+      "step": "03b", "script": "check-ai-patterns.js",
+      "rule_version": "2.0", "deprecated": false,
+      "changelog": [
+        {"version": "1.0", "date": "2026-06-15", "change": "V5.3新增：minWindowTTR<0.25=advisory"},
+        {"version": "1.1", "date": "2026-06-20", "change": "V5.3.1阈值统一"},
+        {"version": "2.0", "date": "2026-07-18", "change": "V6.0改为adaptive：核心章minWindowTTR<0.28、过场章<0.22"}
+      ],
+      "adaptive_thresholds": {"core": 0.28, "important": 0.25, "transitional": 0.22, "accent": 0.22},
+      "description": "V5.3新增：滑动窗口Type-Token Ratio检测，minWindowTTR<0.25=advisory（V5.3.1阈值统一）"
+    },
+    {
+      "id": "R019", "name": "AI过渡句模式检测", "enabled": true, "severity": "soft",
+      "step": "03b", "script": "check-ai-patterns.js",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-15", "change": "V5.3新增"}],
+      "description": "V5.3新增：检测'然而/不过/与此同时'等AI过渡句模式化使用，≥5处=advisory"
+    },
+    {
+      "id": "R020", "name": "信息密度均匀性检测", "enabled": true, "severity": "adaptive",
+      "step": "03b", "script": "check-ai-patterns.js",
+      "rule_version": "2.0", "deprecated": false,
+      "changelog": [
+        {"version": "1.0", "date": "2026-06-15", "change": "V5.3新增：方差<0.002=advisory"},
+        {"version": "2.0", "date": "2026-07-18", "change": "V6.0改为adaptive：核心章方差<0.003、过场章<0.0015"}
+      ],
+      "adaptive_thresholds": {"core": 0.003, "important": 0.002, "transitional": 0.0015, "accent": 0.0015},
+      "description": "V5.3新增：分段信息密度方差检测，方差<0.002=advisory（信息分布过于均匀）"
+    },
+    {
+      "id": "R021", "name": "混合评分模型", "enabled": true, "severity": "hard",
+      "step": "03b", "script": "check-quality-score.js",
+      "rule_version": "2.0", "deprecated": false,
+      "changelog": [
+        {"version": "1.0", "date": "2026-06-15", "change": "V5.3新增：脚本客观分60+LLM主观分40=最高92分（×0.8校准）"},
+        {"version": "2.0", "date": "2026-06-20", "change": "V5.3.1移除0.8校准因子，改为100分制"}
+      ],
+      "description": "V5.3新增：脚本客观分60+LLM主观分40=最高100分（V5.3.1移除0.8校准因子，原92分制改为100分制）"
+    },
+    {
+      "id": "R022", "name": "跨章文风一致性检测", "enabled": true, "severity": "soft",
+      "step": "03b", "script": "check-style-consistency.js",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-15", "change": "V5.3新增：4维文风指纹"}],
+      "description": "V5.3新增：4维文风指纹（句长/词频/段落/对话），防止跨章文风漂移"
+    },
+    {
+      "id": "R023", "name": "章中钩子", "enabled": true, "severity": "adaptive",
+      "step": "02",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-15", "change": "V5.3新增：4种章中钩子"}],
+      "adaptive_thresholds": {"core": "2-3", "important": "1-2", "transitional": "1", "accent": "0-1"},
+      "description": "V5.3新增：4种章中钩子（对话中断/动作中断/信息不对称/旧钩回咬），过场章≥1个，核心章2-3个"
+    },
+    {
+      "id": "R024", "name": "读者留存预警", "enabled": true, "severity": "soft",
+      "step": "02",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-06-15", "change": "V5.3新增：前3章评分模型"}],
+      "description": "V5.3新增：前3章评分模型（开头吸引力/信息密度/钩子强度各1-5分），总分<8分标记高风险"
+    },
+    {
+      "id": "R025", "name": "执行遥测", "enabled": true, "severity": "hard",
+      "step": "03b", "script": "check-rule-execution.js",
+      "rule_version": "1.0", "deprecated": false,
+      "changelog": [{"version": "1.0", "date": "2026-07-18", "change": "V6.0新增：规则执行遥测，统计每章规则执行率"}],
+      "description": "V6.0新增：对照rules.json规则清单统计执行情况，输出遥测报告到追踪/rule-execution-telemetry.json"
+    }
   ]
 }

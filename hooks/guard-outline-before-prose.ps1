@@ -4,6 +4,13 @@
 # 
 # 用法：.\guard-outline-before-prose.ps1 -ProjectPath "..." -Chapter 5
 # 如果第5章细纲不存在，exit code = 1（阻断正文写作）
+#
+# 跨平台语义说明（V5.4 新增）：
+#   exit 0 = 细纲存在或 -Force 指定（放行，与 .sh 版本一致）
+#   exit 1 = 细纲缺失或目录不存在（阻断正文写作，与 .sh 版本一致）
+#   exit 2 = 参数错误（-ProjectPath 缺失或 -Chapter <= 0，与 .sh 版本一致）
+# 平台差异：部分平台（如 Codex）可能不支持 PreToolUse hook，
+#   参考 hooks/README.md 的"跨平台 Hook Parity"章节获取降级方案。
 
 param(
     [string]$ProjectPath = "",
@@ -27,11 +34,16 @@ if ($Chapter -le 0) {
     exit 2
 }
 
-$detailDir = Join-Path -Path $ProjectPath -ChildPath "细纲"
+# V5.3.1: 细纲目录名从硬编码"细纲"改为支持多种命名（细纲/outline/详细大纲）
+$detailDir = $null
+$candidateDirs = Get-ChildItem -Path $ProjectPath -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '细纲|outline|详细大纲' }
+if ($candidateDirs) {
+    $detailDir = $candidateDirs | Select-Object -First 1 | Select-Object -ExpandProperty FullName
+}
 
 # 检查细纲目录是否存在
-if (-not (Test-Path -LiteralPath $detailDir)) {
-    Write-Host "❌ 阻断：细纲目录不存在！"
+if (-not $detailDir -or -not (Test-Path -LiteralPath $detailDir)) {
+    Write-Host "❌ 阻断：细纲目录不存在！（已搜索：细纲|outline|详细大纲）"
     Write-Host ""
     Write-Host "请先运行 02_细纲编写技能 创建细纲，然后再开始正文写作。"
     Write-Host "SKILL.md 规定：不可在无细纲的情况下写正文（防止'裸奔写作'）。"

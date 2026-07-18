@@ -212,7 +212,7 @@ chapter: Ch.X
 overall_score: 62  # 0-100 分，<70=不合格，70-79=合格，80-89=良好，≥90=优秀
 
 findings:
-  - severity: S1          # S1=必须修复 / S2=强烈建议 / S3=建议优化 / S4=锦上添花
+  - severity: blocking      # blocking=必须修复 / advisory=建议优化 / info=锦上添花
     category: prose       # plot|character|prose|consistency|commercial
     location: Ch.X L42
     evidence: "不是恐惧，而是一种深沉的绝望"
@@ -221,7 +221,7 @@ findings:
     gate: G2              # 对应 Gate 编号
     source: AI鉴定
 
-  - severity: S1
+  - severity: blocking
     category: prose
     location: Ch.X L88
     evidence: "他心中涌起一股莫名的悲伤"
@@ -230,7 +230,7 @@ findings:
     gate: G3
     source: AI鉴定
 
-  - severity: S2
+  - severity: advisory
     category: prose
     location: Ch.X L150-180
     evidence: "（连续300字无事件推进的环境描写）"
@@ -239,7 +239,7 @@ findings:
     gate: G10
     source: AI鉴定
 
-  - severity: S2
+  - severity: advisory
     category: prose
     location: Ch.X L220
     evidence: "之所以他会这样做，是因为童年的阴影"
@@ -253,10 +253,9 @@ findings:
 
 | 等级 | 含义 | 处理要求 | 分数区间映射 | 典型 Gate 映射 |
 |------|------|---------|------------|--------------|
-| S1 | 必须修复 | 不修复不定稿，blocking 级问题 | 对应维度评分 <60 | G1一级禁用词、G2否定翻转、G3心理直给、G10注水熔断 |
-| S2 | 强烈建议 | 严重影响阅读体验 | 对应维度评分 60-69 | G4节奏机械、G6结尾升华、G11解释腔 |
-| S3 | 建议优化 | 可以提升品质 | 对应维度评分 70-79 | G7意象疲劳、G8语调单一 |
-| S4 | 锦上添花 | 有时间再改 | 对应维度评分 80-89 | G5对话微调、G9信息不对称补充 |
+| blocking | 必须修复 | 不修复不定稿，阻断级问题（原S1/S2合并） | 对应维度评分 <60 | G1一级禁用词、G2否定翻转、G3心理直给、G4节奏机械、G6结尾升华、G10注水熔断、G11解释腔 |
+| advisory | 建议优化 | 可以提升品质（原S3） | 对应维度评分 70-79 | G7意象疲劳、G8语调单一 |
+| info | 锦上添花 | 有时间再改（原S4） | 对应维度评分 80-89 | G5对话微调、G9信息不对称补充 |
 
 ---
 
@@ -276,7 +275,7 @@ findings:
 2. **确定性脚本预检**（如可用）：引用 check-ai-patterns.js / check-degeneration.js 的结果作为 baseline
 3. **Gate 1-11 逐项检测**：按11个 Gate 的标准逐项检查正文
 4. **评分计算**：各 Gate 按权重计算综合 AI 味评分（0-100）
-5. **优先级标注**：每个 finding 标注 severity（S1-S4）和对应 Gate 编号
+5. **优先级标注**：每个 finding 标注 severity（blocking/advisory/info）和对应 Gate 编号
 6. **输出报告**：输出完整的 11 Gate 检测报告
 7. **输出 Findings**：将所有发现转为 YAML 格式的 Findings 列表
 
@@ -304,4 +303,4 @@ findings:
 | reader | `.claude/agents/reader-agent.md` | 读者视角（代入感） | 25% |
 | commercial | `.claude/agents/commercial-agent.md` | 商业化（卖点） | 20% |
 
-各 Agent 独立运行，产出独立的 Findings 列表。主线程收集所有 Agent 的 Findings 后按 severity 排序合并，冲突处理规则：S1/S2级任意 Agent 提出即标记"需修改"，S3/S4级按多数票决定。
+各 Agent 独立运行，产出独立的 Findings 列表。主线程收集所有 Agent 的 Findings 后按 severity 排序合并，冲突处理规则：blocking级任意 Agent 提出即标记"需修改"，advisory/info级按多数票决定。

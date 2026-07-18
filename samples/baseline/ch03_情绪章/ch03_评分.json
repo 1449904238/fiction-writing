@@ -1,0 +1,51 @@
+{
+  "chapter": "ch03_情绪章",
+  "chapter_title": "Ch.7 钥匙串",
+  "generated_at": "2026-07-16",
+  "script_version": "V5.3.1",
+  "pipeline": "03a→03b→04→05",
+  "flow_mode": "/flow_full",
+  "scoring_system": "100-point (60 objective + 40 subjective, no 0.8 calibration)",
+  "objective_score": 40,
+  "objective_max": 60,
+  "llm_subjective_score": null,
+  "llm_max_score": 40,
+  "total_score": null,
+  "total_max": 80,
+  "flow_recommendation": "fast",
+  "threshold": { "fast": 80, "full": 60, "rewrite": 60 },
+  "objective_details": {
+    "plot_propulsion": { "score": 1, "max": 15, "reasons": ["信息密度过低：均值0.027（<0.03）", "检测到2个低密度段落（密度<0.02）", "信息密度过于均匀（方差0.0001<0.002）"], "details": { "mean_density": 0.0274, "variance": 0.0001, "segment_count": 8, "water_segments": 2 } },
+    "rhythm_control": { "score": 15, "max": 15, "reasons": ["节奏控制优秀：CV=0.78（≥0.5），长短句交替良好"], "details": { "cv": 0.78, "mean_sentence_length": 13.6, "stdDev": 10.6, "sentence_count": 183 } },
+    "texture_density": { "score": 10, "max": 10, "reasons": ["感官描写丰富：覆盖4/5种感官（密度24.1/千字）", "比喻密度合格：0.4/千字（≤3）"], "details": { "sensory_density": 24.1, "sensory_categories": 4, "metaphor_count": 1, "metaphor_density": 0.4 } },
+    "character_consistency": { "score": 7, "max": 10, "reasons": ["未提供设定JSON或衔接包，给予基准分7分"], "details": { "issues_found": 0, "metadata_used": false } },
+    "ai_baseline": { "score": 7, "max": 10, "reasons": ["检测到2个blocking级问题：narrative-ban-a ×1, em-dash-excess ×1"], "details": { "blocking_count": 2, "issues": [{"type": "narrative-ban-a", "excerpt": "意味着"}, {"type": "em-dash-excess", "excerpt": "破折号25处（≥8）"}] } }
+  },
+  "findings": {
+    "blocking": 8,
+    "advisory": 5,
+    "info": 1
+  },
+  "blocking_issues": [
+    "parallelism-abuse: Gate清单├─结构被误判为排比（元信息干扰）",
+    "em-dash: 破折号25处（限≤4处/章）",
+    "not-is-comparison: '不是慢慢飘起来的。是嗖的一下'",
+    "not-is-comparison: '不是散开，是从中间裂成碎片'",
+    "not-is-comparison: '不是耳朵听到的，是皮肤感觉到的'",
+    "not-is-comparison: '不是紧张。是控制不住的颤抖'",
+    "not-is-comparison: '不是一直在抖——是每隔几秒抖一下'",
+    "narrative-ban-a: '意味着'出现在叙述语中（零容忍）"
+  ],
+  "advisory_issues": [
+    "info-density-uniform: 方差0.0001（<0.002）",
+    "narrative-ban-b: '知道'出现8次（限≤2次/章）",
+    "not-is-comparison(对话): '不是瓶子——是你自己'（白名单降级）",
+    "dialogue-info-density: 3/19个3轮窗口缺乏信息推进",
+    "period-stutter: L153连续8个短句无呼吸",
+    "not-is-comparison(对话): '不是比喻，是真的吐'（白名单降级）"
+  ],
+  "info_issues": [
+    "emotion-anchor: 用户情绪锚点'心酸'已交付（出现2次）"
+  ],
+  "notes": "V5.3.1真实脚本输出。原手写报告声称97分/0 blocking，实际客观分40/60，8个blocking。情绪锚点'心酸'已交付(2次出现)。'不是…是…'句式在本章高频(5处blocking+2处advisory)，为情绪章的节奏特征，部分可考虑白名单。碎句号(L153)需在04精修时合并部分短句。"
+}

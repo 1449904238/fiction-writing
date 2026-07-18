@@ -1,0 +1,44 @@
+{
+  "chapter": "ch01_职场章",
+  "chapter_title": "Ch.3 裁员陷阱",
+  "generated_at": "2026-07-16",
+  "script_version": "V5.3.1",
+  "pipeline": "03a→03b→04→05",
+  "flow_mode": "/flow_full",
+  "scoring_system": "100-point (60 objective + 40 subjective, no 0.8 calibration)",
+  "objective_score": 39,
+  "objective_max": 60,
+  "llm_subjective_score": null,
+  "llm_max_score": 40,
+  "total_score": null,
+  "total_max": 79,
+  "flow_recommendation": "full",
+  "threshold": { "fast": 80, "full": 60, "rewrite": 60 },
+  "objective_details": {
+    "plot_propulsion": { "score": 0, "max": 15, "reasons": ["信息密度过低：均值0.023（<0.03）", "检测到4个低密度段落（密度<0.02），疑似水字数段", "信息密度过于均匀（方差0.0001<0.002）"], "details": { "mean_density": 0.0226, "variance": 0.0001, "segment_count": 8, "water_segments": 4 } },
+    "rhythm_control": { "score": 15, "max": 15, "reasons": ["节奏控制优秀：CV=0.77（≥0.5），长短句交替良好"], "details": { "cv": 0.77, "mean_sentence_length": 14.3, "stdDev": 11, "sentence_count": 205 } },
+    "texture_density": { "score": 10, "max": 10, "reasons": ["感官描写丰富：覆盖4/5种感官（密度22.8/千字）", "比喻密度合格：0.0/千字（≤3）"], "details": { "sensory_density": 22.8, "sensory_categories": 4, "metaphor_count": 0, "metaphor_density": 0 } },
+    "character_consistency": { "score": 7, "max": 10, "reasons": ["未提供设定JSON或衔接包，给予基准分7分"], "details": { "issues_found": 0, "metadata_used": false } },
+    "ai_baseline": { "score": 7, "max": 10, "reasons": ["检测到1个blocking级问题：em-dash-excess"], "details": { "blocking_count": 1, "issues": [{"type": "em-dash-excess", "excerpt": "破折号26处（≥8）"}] } }
+  },
+  "findings": {
+    "blocking": 7,
+    "advisory": 3,
+    "info": 0
+  },
+  "blocking_issues": [
+    "parallelism-abuse: Gate清单├─结构被误判为排比（元信息干扰）",
+    "em-dash: 破折号26处（限≤4处/章），含正文中的——和头部├─",
+    "not-is-comparison: '不是谈话，是走流程'",
+    "negation-parallelism: '不是公司配的那个——自己写的'",
+    "imagery-repeat: '太阳穴'出现6次（≥5次=模式化）",
+    "negation-parallelism: '没有愤怒，只有'"
+  ],
+  "advisory_issues": [
+    "info-density-uniform: 方差0.0001（<0.002），各段密度均匀",
+    "narrative-ban-b: '知道'出现6次（限≤2次/章）",
+    "dialogue-info-density: 3/13个3轮窗口缺乏信息推进",
+    "emotion-direct: '愤怒'情绪词直给"
+  ],
+  "notes": "V5.3.1真实脚本输出。原手写报告声称96分/0 blocking，实际客观分39/60，7个blocking。差异原因：①原报告为人工编造非脚本生成；②脚本扫描含文件头部元信息(去AI味执行回执)，破折号计数含Gate清单中的├─符号；③'不是…是…'句式在都市题材中部分为角色口语特征，可通过白名单降级。已知限制已记录在MANIFEST.json中。"
+}

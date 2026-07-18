@@ -150,9 +150,9 @@ const FUZZY_PATTERNS = {
     /(十[一二三四五六七八九]|二十[一二三四五六七八九]|[一二两三四五六七八九十]+)岁/g, // 中文年龄补充
   ],
   distance: [
-    /([东南西北])(\d+)里/g,                                          // "南3里" 带方向
-    /(约|差不多|大概|近|不到)(\d+)里/g,                              // "约5里" 模糊距离
-    /([一二两三四五六七八九十百]+)里(?:路|地|程)?/g,                 // "三里路" 中文距离
+    /([东南西北])(\d+)(公里|千米|里|米|步|丈)/g,                     // "南3里" 带方向（支持多单位）
+    /(约|差不多|大概|近|不到)(\d+)(公里|千米|里|米|步|丈)/g,         // "约5里" 模糊距离（支持多单位）
+    /([一二两三四五六七八九十百]+)(公里|千米|里|米|步|丈)(?:路|地|程)?/g, // "三里路" 中文距离（支持多单位）
     /半日(?:路|程)/g,                                                // "半日路"
     /(一天|半天|两小时)(?:路|程|车程)/g,                            // "半天车程"
   ],
@@ -237,6 +237,73 @@ function validateValue(type, value, context) {
 }
 
 // ════════════════════════════════════════════════════════════
+//  距离量词单位分类（V5.3修复：避免不同单位交叉误报）
+// ════════════════════════════════════════════════════════════
+
+/**
+ * 距离量词单位分类表
+ * 用于距离矛盾检测时确保只比对相同单位的距离值
+ * 公里需在里之前匹配（避免"公里"中的"里"被误提取为独立单位）
+ * @constant
+ */
+const DISTANCE_UNITS = {
+  '公里': { name: '公里', aliases: ['千米', 'km'] },
+  '里':   { name: '里',   aliases: [] },
+  '米':   { name: '米',   aliases: [] },
+  '步':   { name: '步',   aliases: [] },
+  '丈':   { name: '丈',   aliases: [] },
+};
+
+/**
+ * 从文本中提取距离量词单位
+ * 按单位字符串长度降序匹配（公里2字优先于里1字），避免"公里"被截断为"里"
+ * 同时检查别名（如"千米"归一为"公里"）
+ * @param {string} text - 待提取的文本（如 raw 匹配串 "南3里" 或 metadata 值 "南5里"）
+ * @returns {string|null} - 归一化后的单位名称（公里/里/米/步/丈），未找到返回 null
+ */
+function extractDistanceUnit(text) {
+  if (!text) return null;
+  // 按长度降序匹配：公里(2字) 必须在 里(1字) 之前
+  const sortedUnits = Object.keys(DISTANCE_UNITS).sort((a, b) => b.length - a.length);
+  for (const unit of sortedUnits) {
+    const unitData = DISTANCE_UNITS[unit];
+    // 检查主名和别名
+    const allNames = [unit, ...unitData.aliases];
+    for (const name of allNames) {
+      if (text.includes(name)) {
+        return unit; // 返回归一化后的主名
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * 检查正文上下文是否与 metadata 路线名相关
+ * 从路线名中提取地点关键词（如 "东山-西山" → ["东山", "西山"]），
+ * 检查正文上下文是否包含这些关键词。
+ * 若路线名无法提取出地点关键词（如英文键名），返回 true（无法判定时允许比较，保持向后兼容）
+ * @param {string} context - 正文上下文文本
+ * @param {string} routeName - metadata 中的路线名（如 "东山-西山"）
+ * @returns {boolean} - 上下文与路线相关（或无法判定）返回 true，明确无关返回 false
+ */
+function isContextRelatedToRoute(context, routeName) {
+  if (!context || !routeName) return true; // 信息不足时允许比较（向后兼容）
+  // 从路线名提取地点关键词：按常见分隔符拆分
+  const locations = String(routeName)
+    .split(/[-—–~至到→\s,，、]+/)
+    .map(s => s.trim())
+    .filter(s => s.length >= 2);
+  // 无法提取地点关键词时，允许比较（向后兼容）
+  if (locations.length === 0) return true;
+  // 检查上下文是否包含任一地点关键词
+  for (const loc of locations) {
+    if (context.includes(loc)) return true;
+  }
+  return false;
+}
+
+// ════════════════════════════════════════════════════════════
 //  动态 tier 正则生成
 // ════════════════════════════════════════════════════════════
 
@@ -299,7 +366,7 @@ function extractNumbers(text, enabledChecks, metadata) {
     }
   }
 
-  // ── 距离提取（方向+阿拉伯+中文+模糊量词） ──
+  // ── 距离提取（方向+阿拉伯+中文+模糊量词，支持多单位） ──
   if (enabledChecks.includes('distance')) {
     for (const re of FUZZY_PATTERNS.distance) {
       re.lastIndex = 0;
@@ -310,22 +377,26 @@ function extractNumbers(text, enabledChecks, metadata) {
         seen.add(key);
         let dir = null;
         let value = null;
-        // 判断方向（仅 pattern 1 的 m[1] 是方向字）
+        // 判断方向与数值（pattern 1-3 的捕获组结构不同，需分别处理）
         if (m[1] && /[东南西北]/.test(m[1])) {
+          // pattern 1: ([东南西北])(\d+)(unit) — 带方向
           dir = m[1];
           value = m[2] ? parseChineseNumber(m[2]) : null;
-        } else if (m[2]) {
-          // pattern 2: m[1]=前缀词(约/差不多…), m[2]=数字
+        } else if (m[2] && /\d/.test(m[2])) {
+          // pattern 2: (prefix)(\d+)(unit) — 模糊前缀+阿拉伯数字
           value = parseChineseNumber(m[2]);
-        } else if (m[1]) {
-          // pattern 3: m[1]=中文数字
+        } else if (m[1] && /[一二两三四五六七八九十百]/.test(m[1])) {
+          // pattern 3: (chinese_number)(unit)(suffix?) — 中文数字
           value = parseChineseNumber(m[1]);
         }
         // patterns 4,5: 模糊时间距离，value 保持 null
+        // 提取距离单位（用于后续只比对相同单位的距离）
+        const unit = extractDistanceUnit(m[0]);
         findings.push({
           type: 'distance',
           direction: dir,
           value: value,
+          unit: unit,
           raw: m[0],
           index: m.index,
           context: ctx(m.index, m[0]),
@@ -484,7 +555,7 @@ function checkConsistency(findings, metadata, enabledChecks) {
   const issues = [];
 
   if (!metadata) {
-    return [{ severity: 'warn', message: '未提供元数据文件，跳过一致性检测（仅做语义校验）' }];
+    return [{ severity: 'advisory', message: '未提供元数据文件，跳过一致性检测（仅做语义校验）' }];
   }
 
   const anchors = metadata.number_anchors || {};
@@ -537,29 +608,41 @@ function checkConsistency(findings, metadata, enabledChecks) {
     }
   }
 
-  // ── 检测距离矛盾 ──
+  // ── 检测距离矛盾（V5.3修复：单位分类+路线上下文+±10%容差） ──
   if (enabledChecks.includes('distance')) {
     const distFindings = findings.filter(f => f.type === 'distance' && f.value != null);
     const distances = anchors.distances || {};
     for (const f of distFindings) {
+      const fUnit = f.unit || extractDistanceUnit(f.raw);
       for (const [route, expectedDist] of Object.entries(distances)) {
-        // 简单匹配：如果距离值不同，标记为可疑
+        const expectedStr = String(expectedDist);
         const expectedNum = parseChineseNumber(
-          String(expectedDist).match(/[\d一二两三四五六七八九十百]+/)?.[0] || '0'
+          expectedStr.match(/[\d一二两三四五六七八九十百]+/)?.[0] || '0'
         );
-        if (expectedNum > 0 && f.value !== expectedNum) {
-          // 仅在方向也匹配时报告
-          const expectedDir = String(expectedDist).match(/[东南西北]/)?.[0];
-          if (!expectedDir || expectedDir === f.direction) {
-            issues.push({
-              severity: 'advisory',
-              type: 'distance-mismatch',
-              message: `距离可能矛盾：正文写"${f.raw}"，number_anchors中"${route}"="${expectedDist}"`,
-              location: f.context.trim(),
-              expected: String(expectedDist),
-              actual: f.raw,
-            });
-          }
+        if (expectedNum <= 0) continue;
+
+        // ① 单位检查：双方都有单位且单位不同时跳过（避免"里"与"米"等不同单位交叉误报）
+        const expectedUnit = extractDistanceUnit(expectedStr);
+        if (fUnit && expectedUnit && fUnit !== expectedUnit) continue;
+
+        // ② 路线上下文检查：正文上下文与该路线无关时跳过（避免不同路线的距离值交叉误报）
+        if (!isContextRelatedToRoute(f.context, route)) continue;
+
+        // ③ ±10% 近似容差：差值在容差范围内视为一致，不报告
+        const tolerance = expectedNum * 0.1;
+        if (Math.abs(f.value - expectedNum) <= tolerance) continue;
+
+        // ④ 值不匹配，检查方向一致性（保持原有逻辑）
+        const expectedDir = expectedStr.match(/[东南西北]/)?.[0];
+        if (!expectedDir || expectedDir === f.direction) {
+          issues.push({
+            severity: 'advisory',
+            type: 'distance-mismatch',
+            message: `距离可能矛盾：正文写"${f.raw}"，number_anchors中"${route}"="${expectedDist}"`,
+            location: f.context.trim(),
+            expected: expectedStr,
+            actual: f.raw,
+          });
         }
       }
     }
@@ -602,22 +685,52 @@ function checkConsistency(findings, metadata, enabledChecks) {
       .map(t => t.tier_name)
       .filter(Boolean);
     if (tierNames.length > 0) {
+      // #13 修复：增加上下文窗口检查 + 战斗语境白名单 + 日常语境排除
+      const soloRe = /独自|单挑|一人|凭一己之力/g;
+      const killRe = /斩杀|击杀|秒杀|碾压/g;
+      const battleContextRe = /战|斗|打|杀|攻|防|敌|怪|兽|妖|魔/;
+      const dailyContextRe = /路上|走路|吃饭|睡觉|看书|发呆|散步|逛街|喝茶|聊天|休息|洗澡|穿衣|照镜子/;
+      const MAX_CONTEXT_WINDOW = 50; // 两个正则匹配位置的最大距离（字）
+
       const tierFindings = findings.filter(f => f.type === 'tier');
       for (const f of tierFindings) {
-        // tier 正则已限定为已知等级名，此处做 ability_ceiling 提示
-        // 检查上下文是否暗示越级战斗表现
-        if (/独自|单挑|一人|凭一己之力/.test(f.context) && /斩杀|击杀|秒杀|碾压/.test(f.context)) {
-          const tierData = tierNames.includes(f.value) ? f.value : null;
-          if (tierData) {
-            issues.push({
-              severity: 'advisory',
-              type: 'power-overflow',
-              message: `战力表现可疑：正文出现"${f.value}"等级的越级战斗描写，请对照 power_system.ability_ceiling 确认是否越界`,
-              location: f.context.trim(),
-              expected: '不超出当前等级 ability_ceiling',
-              actual: f.raw,
-            });
+        const ctx = f.context || '';
+
+        // 排除日常语境：如果上下文包含日常活动词，跳过越级战斗检测
+        if (dailyContextRe.test(ctx)) continue;
+
+        // 查找两组正则的所有匹配位置
+        const soloPositions = [];
+        const killPositions = [];
+        let m;
+        soloRe.lastIndex = 0;
+        while ((m = soloRe.exec(ctx)) !== null) { soloPositions.push(m.index); }
+        killRe.lastIndex = 0;
+        while ((m = killRe.exec(ctx)) !== null) { killPositions.push(m.index); }
+
+        // 上下文窗口检查：两个正则的匹配位置必须在50字以内（说明是同一语境）
+        let withinWindow = false;
+        for (const sp of soloPositions) {
+          for (const kp of killPositions) {
+            if (Math.abs(sp - kp) <= MAX_CONTEXT_WINDOW) { withinWindow = true; break; }
           }
+          if (withinWindow) break;
+        }
+        if (!withinWindow) continue;
+
+        // 战斗语境白名单：上下文必须包含战斗关键词才触发越级战斗检测
+        if (!battleContextRe.test(ctx)) continue;
+
+        const tierData = tierNames.includes(f.value) ? f.value : null;
+        if (tierData) {
+          issues.push({
+            severity: 'advisory',
+            type: 'power-overflow',
+            message: `战力表现可疑：正文出现"${f.value}"等级的越级战斗描写，请对照 power_system.ability_ceiling 确认是否越界`,
+            location: f.context.trim(),
+            expected: '不超出当前等级 ability_ceiling',
+            actual: f.raw,
+          });
         }
       }
     }

@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fiction-writing/schemas/agent-output.schema.json",
+  "title": "Agent 输出统一格式 (Unified Agent Output Schema)",
+  "description": "V5.3.1 统一 4 个独立审稿 Agent（story-editor/ai-detector/reader-agent/commercial-agent）的输出格式。强约束 JSON Schema，替代旧版 YAML 自由格式。清理废弃字段：story-editor 不再输出代入感/感官锚点深度（归 reader-agent）；reader 不再输出爽感满足/信息获取（归 commercial-agent）、质感文笔（归 story-editor）、AI味（归 ai-detector）。与 findings.schema.json 互补：findings.schema.json 用于流水线步骤(03a/03b/04/05/09)的质检通信，本 Schema 专用于 Agent 独立 spawn 的标准化输出。",
+  "type": "object",
+  "required": ["agent_name", "chapter_id", "score", "findings", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "agent_name": {
+      "type": "string",
+      "enum": ["story-editor", "ai-detector", "reader", "commercial"],
+      "description": "产出本报告的 Agent 名称。story-editor=编辑视角(质感:潜台词/金句/情感工艺/画面感/标点) / ai-detector=AI鉴定(去AI味) / reader=读者视角(代入感/节奏感/角色辨识度/情绪共鸣/悬念期待/阅读流畅度) / commercial=商业化(卖点/爽感/信息投放)。"
+    },
+    "chapter_id": {
+      "type": "string",
+      "description": "章节标识（如 'Ch.5'）。与正文文件名中的章节号对应。",
+      "minLength": 1
+    },
+    "score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "综合评分（0-100）。分档：≥90优秀 / 80-89良好 / 70-79合格 / <70不合格。09 综合评分公式（编辑×30% + AI鉴定×25% + 读者×25% + 商业化×20%）可直接使用，无需归一化转换。"
+    },
+    "findings": {
+      "type": "array",
+      "description": "问题清单。按 severity 排序：blocking(必须修复) > advisory(建议优化) > info(锦上添花)。仅包含本 Agent 边界范围内的问题，不越界评估其他 Agent 维度。",
+      "items": {
+        "type": "object",
+        "required": ["severity", "category", "location", "description", "suggestion"],
+        "additionalProperties": false,
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": ["blocking", "advisory", "info"],
+            "description": "严重程度：blocking=必须修复（不修复不定稿，对应维度评分<60）/ advisory=建议优化（对应维度评分60-79）/ info=锦上添花（对应维度评分80-89）"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["plot", "character", "prose", "consistency", "commercial"],
+            "description": "问题类别：plot=情节 / character=角色 / prose=文笔(质感，story-editor主要输出) / consistency=一致性 / commercial=商业化(commercial-agent主要输出)"
+          },
+          "location": {
+            "type": "string",
+            "description": "问题位置定位（如 'Ch.5 L120-135' 表示第5章第120-135行，'Ch.5 章末' 表示章末，'Ch.5 全章' 表示全章性问题）",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "问题描述：明确说明问题是什么、为什么是问题。可包含原文引用作为证据。",
+            "minLength": 1
+          },
+          "suggestion": {
+            "type": "string",
+            "description": "修改建议：具体可执行的修复方向。",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "description": "本章节审稿结论摘要（1-3句话）。包含整体评价、主要问题概述、是否建议放行。",
+      "minLength": 1
+    }
+  }
+}

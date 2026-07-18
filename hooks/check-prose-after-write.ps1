@@ -2,6 +2,14 @@
 # 对标 oh-story-claudecode 的 check-prose-after-write.sh (PostToolUse)
 # 触发时机：正文落盘后（PostToolUse / Write/Edit 之后）
 # 作用：自动运行 3 个确定性脚本，报告 blocking 级 finding，防止落盘失败/截断/复读/工程词泄漏
+#
+# 跨平台语义说明（V5.4 新增）：
+#   exit 0 = 无 blocking 问题（与 .sh 版本一致）
+#   exit 1 = node.js 不可用且未设置 SKIP_PROSE_CHECK=1（阻断，与 .sh 版本一致）
+#   exit 2 = 发现 blocking 级问题（需回 05 去AI味，与 .sh 版本一致）
+#   exit 0 + SKIP_PROSE_CHECK=1 = 用户手动跳过检测（与 .sh 版本一致）
+# 平台差异：Trae/Claude Code 的 hook 系统对 exit 2 的阻断行为不同，
+#   参考 hooks/README.md 的"跨平台 Hook Parity"章节获取各平台配置说明。
 
 param(
     [Parameter(Mandatory=$true)]
@@ -23,7 +31,7 @@ if (-not (Test-Path $FilePath)) {
 
 # 只检查正文文件（.md 且在 正文/ 目录下，或用户指定）
 $fileName = Split-Path -Leaf $FilePath
-if ($fileName -notmatch "第\d+章|正文|chapter") {
+if ($fileName -notmatch "第\d+章|正文|chapter|ch\d+") {
     # 非正文文件，跳过
     exit 0
 }
@@ -31,14 +39,21 @@ if ($fileName -notmatch "第\d+章|正文|chapter") {
 $Node = (Get-Command node -ErrorAction SilentlyContinue).Source
 if (-not $Node) {
     Write-Host ""
-    Write-Host "========================================" -ForegroundColor Yellow
-    Write-Host "  ⚠ 警告：未检测到 node.js" -ForegroundColor Yellow
-    Write-Host "  写后质量兜底检测已被跳过！" -ForegroundColor Yellow
-    Write-Host "  请安装 node.js 以启用确定性脚本检测。" -ForegroundColor Yellow
-    Write-Host "  下载：https://nodejs.org/" -ForegroundColor Gray
-    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host "  [BLOCKING] 未检测到 node.js" -ForegroundColor Red
+    Write-Host "  写后质量兜底检测无法执行！" -ForegroundColor Red
+    Write-Host "  这将阻断正文落盘——确定性脚本检测是质量底线。" -ForegroundColor Red
+    Write-Host "  请安装 node.js 后重试：https://nodejs.org/" -ForegroundColor Gray
+    Write-Host "  如需跳过检测（不推荐），请手动设置 SKIP_PROSE_CHECK=1" -ForegroundColor Gray
+    Write-Host "========================================" -ForegroundColor Red
     Write-Host ""
-    exit 0  # 放行但不静默——用户需知晓检测被跳过
+    # V5.3.1: node不可用时从exit 0(静默放行)改为exit 1(警告并阻断)
+    # 确定性脚本检测是质量底线，不应静默跳过
+    if ($env:SKIP_PROSE_CHECK -eq "1") {
+        Write-Host "[check-prose-after-write] SKIP_PROSE_CHECK=1 已设置，跳过检测" -ForegroundColor Yellow
+        exit 0
+    }
+    exit 1  # 阻断：node不可用时不应静默放行
 }
 
 $blocking = 0
@@ -83,9 +98,11 @@ if (Test-Path $script3) {
     }
 }
 
-# 4. 字数欠账粗检（正文文件）
+# 4. 字数欠账粗检（正文文件）— V5.3.1: 只计中日韩字符+字母数字，去除标点和空白
 $content = Get-Content $FilePath -Raw -Encoding UTF8
-$charCount = ($content -replace '\s', '').Length
+# 只计中日韩统一表意文字 + 平假名/片假名 + 字母数字（排除标点、空格、markdown符号）
+$cjkAlphaNum = [regex]::Matches($content, '[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ffa-zA-Z0-9]')
+$charCount = $cjkAlphaNum.Count
 if ($charCount -lt 3500) {
     $advisory++
     Write-Host "[check-prose-after-write] ADVISORY: 字数 $charCount < 3500（规则下限），疑似欠字/截断" -ForegroundColor Yellow

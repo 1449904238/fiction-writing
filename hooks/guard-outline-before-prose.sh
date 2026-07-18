@@ -27,11 +27,18 @@ if [ -z "$CHAPTER" ]; then
     exit 0
 fi
 
-DETAIL="$PROJECT_PATH/细纲"
+# V5.3.1: 细纲目录名从硬编码"细纲"改为支持多种命名（细纲/outline/详细大纲）
+DETAIL=""
+for dir_name in "细纲" "outline" "详细大纲"; do
+    if [ -d "$PROJECT_PATH/$dir_name" ]; then
+        DETAIL="$PROJECT_PATH/$dir_name"
+        break
+    fi
+done
 
-# 检查细纲目录是否存在（与 .ps1 版本一致，在 细纲/ 目录查找）
-if [ ! -d "$DETAIL" ]; then
-    echo "[guard-outline] ❌ 阻断：细纲目录不存在！"
+# 检查细纲目录是否存在（与 .ps1 版本一致，支持多种命名）
+if [ -z "$DETAIL" ] || [ ! -d "$DETAIL" ]; then
+    echo "[guard-outline] ❌ 阻断：细纲目录不存在！（已搜索：细纲|outline|详细大纲）"
     echo "[guard-outline]"
     echo "[guard-outline] 请先运行 02_细纲编写技能 创建细纲，然后再开始正文写作。"
     echo "[guard-outline] SKILL.md 规定：不可在无细纲的情况下写正文（防止'裸奔写作'）。"
