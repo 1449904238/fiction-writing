@@ -1,0 +1,9 @@
+{
+  "kind": "historical",
+  "data": {
+    "institutions": [{"name": "铨选", "formal_power": "吏部举荐", "actual_power": "门阀把持", "gap": "举荐权与实权分离"}],
+    "interest_map": [{"faction": "吏部", "needs": "举荐权", "legitimacy": "铨选制度", "allies": "门阀", "secret_line": "不得公开卖官"}],
+    "power_transitions": [{"event": "贬谪", "legal_threshold": "御史弹劾", "executor": "吏部", "beneficiary": "对家", "backlash": "派系反扑"}],
+    "information_channels": [{"channel": "奏报", "speed": "三日达京", "cut_method": "截留驿站"}]
+  }
+}

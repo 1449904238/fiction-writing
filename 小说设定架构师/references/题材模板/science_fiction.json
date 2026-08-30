@@ -1,0 +1,9 @@
+{
+  "kind": "science_fiction",
+  "data": {
+    "technology_constraints": [{"tech": "跃迁引擎", "capability": "单次跃迁三光年", "cost": "三日充能与舰体过热", "boundary": "连续跃迁偏航", "social_cost": "平民无法负担"}],
+    "system_dependencies": [{"system": "跃迁网络", "depends_on": "地面充能站", "break_point": "充能站被毁即断航"}],
+    "human_tradeoffs": [{"gain": "星际通行", "price": "记忆与身体负荷", "who_pays": "领航员"}],
+    "failure_scenarios": [{"scenario": "跃迁偏航", "cause": "充能不足", "consequence": "迷航三日"}, {"scenario": "引擎过热", "cause": "连续跃迁", "consequence": "舰体解体风险"}, {"scenario": "网络劫持", "cause": "充能站被控", "consequence": "航道被改"}]
+  }
+}

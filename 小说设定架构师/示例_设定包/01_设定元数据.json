@@ -1,0 +1,210 @@
+{
+  "contract_version": "1.0",
+  "source_revision": "v1.0.0",
+  "novel": {
+    "title": "雾港档案",
+    "genre": "悬疑",
+    "premise": "法医档案员顾衍在整理旧案时，发现一具本应“失踪”的尸体出现在验尸房，而所有记录都指向他早已殉职的搭档周衡。",
+    "reader_promise": "每个线索都有可回溯的来源，主角的每次推理都建立在可验证的物证上，不靠灵光一现。",
+    "target_platform": "番茄小说",
+    "source_trace": [
+      {"subject": "验尸房出现“失踪”尸体与封存记录矛盾", "origin": "user", "note": "用户提供的核心高概念"},
+      {"subject": "顾衍三段因果链", "origin": "derived", "note": "由档案被篡改与上报被调离的经历推导"}
+    ]
+  },
+  "story_engine": {
+    "opening_delivery": {
+      "reader_knows": "顾衍是验尸房档案员，搭档周衡三年前“殉职”并已火化，封存记录完整",
+      "immediate_conflict": "冷藏柜里出现一具标着“失踪”的尸体，正是周衡，与封存记录正面冲突",
+      "first_payoff_or_threat": "顾衍当众调出三年前的封存记录，记录显示周衡已殉职火化，但尸体就在眼前"
+    },
+    "reward_map": {
+      "core_reward": "用一份可验证的物证换一次复核或准入，每次回报都伴随旧案缺口曝光与内务盯上",
+      "first_500": "验尸房例行核对时，顾衍发现冷藏柜里多了一具标着“失踪”的尸体——正是搭档周衡",
+      "first_3_chapters": "第1章验尸房发现“失踪”尸体并调出封存记录；第2章拒绝交出档案室钥匙；第3章用潮汐记录换到尸检复核资格",
+      "unit_loop": "入场 → 用一份物证换一次复核 → 暴露一个旧案缺口 → 掩盖者用伪造档案反制",
+      "cadence": "editorial_assumption: 每个短单元至少改变一次物证、关系、信息或风险；连续回报必须增加后续代价",
+      "price_of_reward": "每次调用物证都会让一段旧案重新浮出水面，并让内务更紧地盯上顾衍"
+    },
+    "three_chapter_map": [
+      {"chapter": 1, "change": "顾衍从例行核对变为发现“失踪”尸体并公开调出封存记录", "reader_delivery": "尸体与记录矛盾，内务开始盯上顾衍", "ending_pull": "内务将如何处置这具“不该存在”的尸体"},
+      {"chapter": 2, "change": "顾衍拒绝交出档案室钥匙，船务公司抛出“尸体是伪造”的说法", "reader_delivery": "顾衍守住档案室，但被孤立", "ending_pull": "拒绝交钥匙后顾衍还有没有别的出路"},
+      {"chapter": 3, "change": "顾衍用一份潮汐记录换到尸检复核资格，内务立案调查", "reader_delivery": "拿到复核资格但代价是立案", "ending_pull": "立案下尸检复核能否按期完成"}
+    ],
+    "main_conflict": {
+      "protagonist_goal": "查明搭档周衡之死的真相，洗清自己“伪造档案”的嫌疑",
+      "opposing_force": "港口商会与警局内部的掩盖者",
+      "why_it_persists": "关键物证被分散在验尸房、船务公司和商会账房，顾衍无法一次性取回，每次只能拿到一小块",
+      "failure_cost": "被以“伪造档案”定罪，搭档之死永远成为悬案"
+    },
+    "escalation_ladder": [
+      {"trigger": "顾衍用一份物证换到复核资格", "what_changes": "掩盖者把缺页变成内务立案与档案作废", "price": "一段旧案重新浮出水面"},
+      {"trigger": "顾衍公开承认封存记录有缺页", "what_changes": "从单人调查变为与林霜共同承担", "price": "缺页事实进入公开记录"},
+      {"trigger": "商会刷屏“监守自盗”压制顾衍", "what_changes": "顾衍必须用可验证物证反击而非口头辩解", "price": "每次反击都消耗一份物证"}
+    ],
+    "ending_question": "顾衍能否在物证耗尽之前，用可验证的事实查明真相并让掩盖者付出代价"
+  },
+  "world": {
+    "rules": [
+      {
+        "rule": "港口档案制度：验尸房档案必须附潮汐与船只记录作为时间锚点",
+        "boundary": "只能记录可验证的物证，不能记录传闻",
+        "cost": "一份无时间锚点的档案会被作废",
+        "dramatic_use": "掩盖者通过伪造时间锚点让封存档案失效"
+      }
+    ],
+    "locations": [
+      {
+        "id": "loc-morgue",
+        "name": "验尸房",
+        "importance": "P0",
+        "geography": "港务大楼地下二层，冷藏柜区与档案室相邻",
+        "resource": "唯一存放原始尸检记录与冷藏尸体的地方",
+        "economy": "无直接经济产出，但掌握档案等于掌握港口把柄"
+      },
+      {
+        "id": "loc-dock",
+        "name": "船务公司码头",
+        "importance": "P1",
+        "story_use": "船只记录与当天监控的所在地，林霜在此发现记录对不上"
+      }
+    ],
+    "factions": [
+      {
+        "id": "fac-harbor",
+        "name": "港口商会",
+        "importance": "P0",
+        "income": "船务佣金与仓储费",
+        "recruitment": "码头工人与账房先生",
+        "boundary": "只能通过档案、舆论与内务渠道施压，不能直接操纵司法",
+        "reason_to_exist": "维持港口秩序以保护垄断地位"
+      }
+    ]
+  },
+  "characters": [
+    {
+      "id": "char-guyan",
+      "name": "顾衍",
+      "priority": "P0",
+      "role": "主角",
+      "current_goal": "查明搭档周衡之死的真相，洗清自己“伪造档案”的嫌疑",
+      "misbelief": "只要守住档案室，就能守住真相不被篡改",
+      "line_in_the_sand": "不伪造物证，不销毁任何原始记录",
+      "resources": "验尸房钥匙、三年前的封存档案、对港口档案制度的完整记忆",
+      "cost_or_vulnerability": "每次调用物证都会让一段旧案重新浮出水面，并让内务更紧地盯上他",
+      "pressure_tell": "越紧张越只报物证编号，绝不给任何人看完整推理",
+      "status": "alive",
+      "naming_rationale": "顾衍——顾念而衍伸，呼应他靠旧档案追索真相的处境",
+      "life_chain": {
+        "events": [
+          {"scene": "三年前周衡“殉职”，顾衍负责封存档案，发现火化单与尸体编号对不上", "observable_change": "他偷偷留了一份验尸房钥匙，此后重要档案只做交叉验证"},
+          {"scene": "第一次发现档案被篡改，他选择上报，被调离一线", "observable_change": "他不再口头背书，每份档案都附时间锚点"},
+          {"scene": "被内务约谈后，林霜劝他公开缺页，他拒绝并锁死档案室", "observable_change": "此后面对所有人只报物证编号，不给全貌"}
+        ],
+        "current_behavior": "手握验尸房钥匙与封存档案，只在换到具体复核时才拿出一份物证"
+      }
+    },
+    {
+      "id": "char-linshuang",
+      "name": "林霜",
+      "priority": "P1",
+      "role": "关键配角",
+      "current_goal": "让顾衍承认当年封存记录有缺页的事实",
+      "misbelief": "只要顾衍不承认，她手里的监控截图就永远无法被采信",
+      "line_in_the_sand": "不替任何人掩盖已发生的物证缺口",
+      "resources": "港口记者身份、三年前的监控截图",
+      "cost_or_vulnerability": "一旦交出截图，等于与港口商会彻底决裂",
+      "pressure_tell": "先要证据再提问，用物证编号回击一切断言",
+      "status": "alive",
+      "origin_event": "三年前报道周衡殉职时，林霜发现船务公司的船只记录对不上",
+      "current_behavior": "只在顾衍公开承认封存记录有缺页后才交出监控截图"
+    }
+  ],
+  "relationships": [
+    {
+      "a_id": "char-guyan",
+      "b_id": "char-linshuang",
+      "current_exchange": "顾衍需要她的报道渠道，她需要他提供可验证的物证",
+      "hidden_asymmetry": "林霜知道周衡殉职当天的船只记录对不上，但不知道顾衍留了验尸房钥匙；顾衍不知道林霜手里有当天的港口监控截图",
+      "turning_event": "顾衍公开承认当年封存记录有缺页，林霜才交出监控截图",
+      "after_turn_state": "林霜从旁观报道变为共同承担调查",
+      "scene_opportunity": "林霜主动接触顾衍不敢碰的旧档案室"
+    }
+  ],
+  "genre_module": {
+    "primary": {
+      "kind": "mystery",
+      "owns_main_conflict": true,
+      "data": {
+        "case_truth": {
+          "truth": "周衡并非殉职而是被灭口",
+          "actor": "港口商会账房主管",
+          "motive": "掩盖三年前的走私账目",
+          "method": "伪造船只记录与火化单",
+          "hidden_cost": "顾衍的档案缺页被利用"
+        },
+        "clue_ledger": [
+          {
+            "id": "clue-1",
+            "appears_in": "第1章验尸房",
+            "visible_fact": "冷藏柜里出现标着“失踪”的尸体",
+            "actually_proves": "殉职记录被伪造",
+            "who_knows": "char-guyan",
+            "verification_path": "核对火化单与尸体编号",
+            "payoff_in": "第3章"
+          },
+          {
+            "id": "clue-2",
+            "appears_in": "第2章船务公司",
+            "visible_fact": "船只离港时间与记录不符",
+            "actually_proves": "船只记录被篡改",
+            "who_knows": "char-linshuang",
+            "verification_path": "港口自动记录交叉验证",
+            "payoff_in": "第4章"
+          },
+          {
+            "id": "clue-3",
+            "appears_in": "第3章码头监控",
+            "visible_fact": "当天码头有未登记车辆",
+            "actually_proves": "有人转移尸体",
+            "who_knows": "char-linshuang",
+            "verification_path": "车牌与商会账房核对",
+            "payoff_in": "第6章"
+          }
+        ],
+        "false_leads": [
+          {"why_plausible": "顾衍留了验尸房钥匙被疑监守自盗", "how_disproved": "钥匙使用记录与尸体出现时间不符"},
+          {"why_plausible": "林霜的报道被疑为炒作", "how_disproved": "监控截图时间戳早于报道"}
+        ],
+        "reveal_schedule": [
+          {"question_closed": "尸体为何出现在验尸房", "larger_question_opened": "谁伪造了殉职记录", "reader_reinterpretation": "封存档案的缺页是被设计的"},
+          {"question_closed": "船只记录为何对不上", "larger_question_opened": "谁批准了走私账目", "reader_reinterpretation": "商会账房也是局中人"}
+        ]
+      }
+    },
+    "secondary": []
+  },
+  "continuity": {
+    "timeline": [
+      {"time": "第1天 验尸房", "event": "顾衍发现“失踪”尸体并公开调出封存记录", "consequence": "内务开始盯上顾衍"},
+      {"time": "第7天 内务立案", "event": "顾衍拿到尸检复核资格，内务立案调查", "consequence": "复核在立案压力下推进"},
+      {"time": "第21天 尸检复核", "event": "尸检复核节点", "consequence": "决定顾衍能否洗清“伪造档案”的嫌疑"}
+    ],
+    "character_states": {
+      "char-guyan": {"status": "alive", "current_position": "验尸房档案室，复核人"},
+      "char-linshuang": {"status": "alive", "current_position": "港口报社，保留监控截图未公开"}
+    },
+    "location_travel": [
+      {"from_id": "loc-morgue", "to_id": "loc-dock", "method": "渡轮", "duration": "30分钟", "constraint": "每次进入码头都会留下登记"}
+    ],
+    "scarce_resources": [
+      {"name": "验尸房钥匙", "quantity_or_access": "1把，未交出", "controller": "char-guyan", "change_condition": "每次使用留下记录"},
+      {"name": "监控截图", "quantity_or_access": "1份，未公开", "controller": "char-linshuang", "change_condition": "顾衍公开承认缺页后交出"}
+    ],
+    "immutable_facts": [
+      {"fact": "“失踪”尸体已出现在验尸房", "reason": "第1章冷藏柜核对发现", "exceptions": "无"},
+      {"fact": "顾衍公开承认封存记录有缺页", "reason": "为换林霜证词当众承认", "exceptions": "无"},
+      {"fact": "林霜监控截图已进入调查材料", "reason": "顾衍承认缺页后林霜交出", "exceptions": "无"}
+    ]
+  }
+}

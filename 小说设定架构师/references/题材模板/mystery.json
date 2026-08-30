@@ -1,0 +1,16 @@
+{
+  "kind": "mystery",
+  "data": {
+    "case_truth": {"truth": "伪造签名掩盖资金挪用", "actor": "财务主管", "motive": "填补挪用亏空", "method": "伪造合伙人签字页", "hidden_cost": "合同连带责任被触发"},
+    "clue_ledger": [
+      {"id": "clue-1", "appears_in": "第1章办公室", "visible_fact": "监控显示22:10离开", "actually_proves": "不在场证明不成立", "who_knows": "char-lin", "verification_path": "核对多机位打卡记录", "payoff_in": "第3章"},
+      {"id": "clue-2", "appears_in": "第2章账本", "visible_fact": "签名页纸张不同", "actually_proves": "签字页被替换", "who_knows": "char-su", "verification_path": "纸张批次鉴定", "payoff_in": "第4章"},
+      {"id": "clue-3", "appears_in": "第3章银行流水", "visible_fact": "三笔异常转账", "actually_proves": "资金被挪用", "who_knows": "char-lin", "verification_path": "银行流水交叉验证", "payoff_in": "第6章"}
+    ],
+    "false_leads": [{"why_plausible": "监控角度易误判为离开", "how_disproved": "多机位交叉验证推翻"}, {"why_plausible": "苏宁有备份被疑泄密", "how_disproved": "备份时间戳早于泄密时间"}],
+    "reveal_schedule": [
+      {"question_closed": "谁伪造签名", "larger_question_opened": "为何要伪造", "reader_reinterpretation": "决裂是被设计的"},
+      {"question_closed": "资金去向", "larger_question_opened": "谁批准挪用", "reader_reinterpretation": "债主也是局中人"}
+    ]
+  }
+}

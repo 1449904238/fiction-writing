@@ -1,0 +1,9 @@
+# 源书二进制（学习资料/ 只提交文档与 raw 外内容）
+学习资料/*.mobi
+学习资料/*.epub
+# raw 分章（vault 方法论库/raw 为权威副本）
+学习资料/raw/
+# 本地状态/记忆/备份（不入库）
+.workbuddy/
+# 系统遗留
+.trae-html-share-packages/

@@ -1,0 +1,13 @@
+{
+  "contract_version": "1.0",
+  "source_revision": "v1.0.0",
+  "package_files": ["00_创作简报.md", "01_设定元数据.json", "02_写作约束.json", "manifest.json"],
+  "genre_modules": ["mystery"],
+  "consumer_read_order": {
+    "outline": ["01_设定元数据.json", "02_写作约束.json"],
+    "beat_sheet": ["02_写作约束.json", "01_设定元数据.json"],
+    "draft": ["02_写作约束.json", "01_设定元数据.json"],
+    "revision": ["02_写作约束.json", "01_设定元数据.json"]
+  },
+  "open_decisions": ["尸检复核能否在内务立案下按期完成取决于第3章谈判结果"]
+}

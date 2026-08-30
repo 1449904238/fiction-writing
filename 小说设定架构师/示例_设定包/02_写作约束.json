@@ -1,0 +1,46 @@
+{
+  "contract_version": "1.0",
+  "source_revision": "v1.0.0",
+  "continuity_guardrails": {
+    "hard_facts": [
+      "“失踪”尸体已出现在验尸房，与封存记录矛盾",
+      "顾衍留了验尸房钥匙，每次使用留下记录",
+      "林霜监控截图在顾衍公开承认缺页后才进入调查材料"
+    ]
+  },
+  "narrative_guardrails": {
+    "avoid_moves": [
+      "不在推理前用整段港口史解释档案制度",
+      "不用他瞳孔一缩、空气凝固了一瞬代替物证推进",
+      "不让主角每章都靠新线索碾压掩盖者"
+    ],
+    "required_moves": [
+      "每次推理前先展示物证来源与验证路径",
+      "解释档案规则时，必须改变主角的可行选择"
+    ],
+    "scene_test": {
+      "desire": "拿到尸检复核资格",
+      "obstacle": "内务立案与商会施压",
+      "action": "用潮汐记录换复核资格",
+      "changed_state": "从被调查变为复核人",
+      "unresolved_pull": "尸体编号与火化单对不上"
+    },
+    "reveal_policy": "只用已出现的物证推进真相，新信息必须重释旧物证，不能凭空替代前因",
+    "relationship_policy": "关系推进由共同担责的选择与代价驱动，不靠反复误会拖延"
+  },
+  "lexical_guardrails": {
+    "avoid": [
+      "他瞳孔一缩",
+      "空气凝固了一瞬",
+      "真相呼之欲出"
+    ],
+    "prefer": [
+      "用核对编号、比对纸张等动作表现推理",
+      "用潮汐与船只记录推进物证"
+    ],
+    "character_voice": {
+      "char-guyan": "只报可验证的物证编号，不口头背书",
+      "char-linshuang": "先要证据再提问，用物证编号回击断言"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "scale": {"min": 0, "max": 4, "anchors": {"0": "缺失或反向破坏", "2": "部分成立但有明显弱点", "4": "具体、稳定且能改变后续选择"}},
+  "dimensions": [
+    {"id": "causal_pressure", "name": "因果压力", "question": "本章/本卷是否由前一状态逼出下一选择？"},
+    {"id": "character_necessity", "name": "人物不可替代性", "question": "换一个主角后，关键选择是否仍然成立？"},
+    {"id": "opponent_agency", "name": "对手主动性", "question": "对手是否会根据主角行动重新配置计划、资源或目标？"},
+    {"id": "genre_delivery", "name": "题材兑现", "question": "主类型的核心体验是否被具体场景持续兑现？"},
+    {"id": "reveal_payoff", "name": "伏笔与反转", "question": "信息是否可回溯，并在揭示后改变理解或选择？"},
+    {"id": "continue_pull", "name": "继续阅读欲", "question": "章末是否留下具体风险、代价、关系变化或新行动？"}
+  ],
+  "hard_fails": ["人物选择没有代价", "对手完全被动", "核心反转没有前置证据", "题材核心承诺在前三章不可见"]
+}

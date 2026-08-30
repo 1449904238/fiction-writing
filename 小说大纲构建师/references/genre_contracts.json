@@ -1,0 +1,120 @@
+{
+  "$comment": "题材契约：references/题材路由.md 的机器可执行版。规则 ID 与路由表逐行对应，md 中标注了映射关系。修改词表时必须同步更新题材路由.md。分级门禁原则：severity=block 的规则只检查无歧义的结构事实；severity=warn 的规则检测质量型负模式，写入回执并路由给语义评审抽查，不直接拒绝。",
+  "contract_version": "1.3",
+  "volume_scope_note": "scope=volume 的规则只在「该卷全部章节都出现在本次大纲内」时执行（batch 大纲只覆盖半卷时跳过，避免用残缺数据误判）；scope=chapter/outline 的规则始终执行。",
+  "axis_advance": {
+    "min_per_chapter": 1,
+    "rest_branch": {
+      "description": "休整章可以没有 axis_advance，但必须显式声明 rest 并给出兑现的 must_deliver 条目",
+      "requires": ["rest"]
+    }
+  },
+  "genres": {
+    "mystery": {
+      "label": "悬疑",
+      "progression_axes_vocab": ["证据链", "嫌疑模型", "认知边界", "风险等级"],
+      "structural_rules": [
+        {"id": "MYST-01", "scope": "volume", "severity": "block", "rule": "P0 伏笔中至少 1 条 type ∈ [物证, 信息]"},
+        {"id": "MYST-02", "scope": "volume", "severity": "block", "rule": "每卷至少 1 次 foreshadowing advance 或 hint 操作"},
+        {"id": "MYST-03", "scope": "chapter", "severity": "block", "rule": "reap 操作所在章必须有非空 evidence_refs 或非休整 axis_advance"},
+        {"id": "MYST-04", "scope": "volume", "severity": "warn", "rule": "嫌疑模型轴的 axis_advance 每卷 ≥ 2 次"}
+      ],
+      "avoid_move_detectors": [
+        {"id": "MYST-A1", "severity": "warn", "verdict": "证据链断裂", "pattern": "连续 3 章无 foreshadowing_ops 且无涉及证据的 axis_advance"},
+        {"id": "MYST-A2", "severity": "warn", "verdict": "无回溯依据的揭示", "pattern": "reap 操作之前没有任何 advance 或 hint 操作"}
+      ]
+    },
+    "romance": {
+      "label": "言情",
+      "progression_axes_vocab": ["关系边界", "信任交换", "共同目标", "失去风险", "欲望张力"],
+      "structural_rules": [
+        {"id": "ROMA-01", "scope": "outline", "severity": "block", "rule": "至少 1 条 relationship 叙事线，或至少 1 次纯关系轴（关系边界/信任交换）axis_advance；共同目标/失去风险/欲望张力算情境轴，只有情境轴推进不算关系变化"}
+      ],
+      "avoid_move_detectors": [
+        {"id": "ROMA-A1", "severity": "warn", "verdict": "无代价推进", "pattern": "纯关系轴（关系边界/信任交换）axis_advance 连续 3 章无 cost_paid"},
+        {"id": "ROMA-A2", "severity": "warn", "verdict": "标签式心动", "pattern": "相同 (axis, change) 组合重复出现 ≥ 3 次"}
+      ]
+    },
+    "progression": {
+      "label": "成长/战斗",
+      "progression_axes_vocab": ["能力边界", "资源", "战术", "代价", "对手强度"],
+      "structural_rules": [
+        {"id": "PROG-01", "scope": "outline", "severity": "block", "rule": "escalation_ladder 每步必须声明 axis_refs（值在词表内），且相邻步骤的 axis_refs 集合不完全相同"},
+        {"id": "PROG-02", "scope": "volume", "severity": "warn", "rule": "能力轴（能力边界/对手强度）推进中至少一半带 cost_paid"}
+      ],
+      "avoid_move_detectors": [
+        {"id": "PROG-A1", "severity": "warn", "verdict": "无代价突破", "pattern": "能力轴 axis_advance 连续 3 章无 cost_paid"}
+      ]
+    },
+    "workplace": {
+      "label": "职场/现实",
+      "progression_axes_vocab": ["准入", "制度", "利益", "声誉", "专业能力"],
+      "structural_rules": [
+        {"id": "WORK-01", "scope": "volume", "severity": "warn", "rule": "每卷至少 1 次制度或准入轴的 axis_advance"}
+      ],
+      "avoid_move_detectors": [
+        {"id": "WORK-A1", "severity": "warn", "verdict": "术语装饰化", "pattern": "连续 5 章无准入/制度/利益/声誉轴推进"}
+      ]
+    },
+    "historical": {
+      "label": "历史/架空",
+      "progression_axes_vocab": ["制度", "资源", "地理", "身份", "时代限制"],
+      "structural_rules": [
+        {"id": "HIST-01", "scope": "volume", "severity": "warn", "rule": "每卷至少 1 次制度或时代限制轴的 axis_advance"}
+      ],
+      "avoid_move_detectors": [
+        {"id": "HIST-A1", "severity": "warn", "verdict": "现代价值观无成本碾压", "pattern": "连续 5 章无时代限制轴且无 cost_paid 中的制度代价"}
+      ]
+    },
+    "urban": {
+      "label": "都市",
+      "progression_axes_vocab": ["现实压力", "关系", "资源", "声誉", "生活约束"],
+      "structural_rules": [
+        {"id": "URBA-01", "scope": "volume", "severity": "warn", "rule": "每卷至少 1 次 resource/reputation 轴的 axis_advance"}
+      ],
+      "avoid_move_detectors": [
+        {"id": "URBA-A1", "severity": "warn", "verdict": "万能人脉/巧合解题", "pattern": "含 branch_nodes 的关键选择章，其全部 axis_advance 无 cost_paid"}
+      ]
+    },
+    "science_fiction": {
+      "label": "科幻",
+      "progression_axes_vocab": ["科技规则", "伦理", "系统性后果", "资源", "风险"],
+      "structural_rules": [
+        {"id": "SCIF-01", "scope": "outline", "severity": "warn", "rule": "至少 1 条 science_fiction 轴的 axis_advance 改变了可行选择并承担后果（cost_paid 非空）"}
+      ],
+      "avoid_move_detectors": [
+        {"id": "SCIF-A1", "severity": "warn", "verdict": "只换名词的都市冲突", "pattern": "全书无科技规则或系统性后果轴的 axis_advance"}
+      ]
+    },
+    "fantasy": {
+      "label": "奇幻",
+      "progression_axes_vocab": ["世界规则", "身份", "资源", "阵营", "能力边界"],
+      "structural_rules": [
+        {"id": "FANT-01", "scope": "volume", "severity": "block", "rule": "至少 1 次 world-rules 或阵营轴的 axis_advance 承担了行动阻力（cost_paid 非空）"}
+      ],
+      "avoid_move_detectors": [
+        {"id": "FANT-A1", "severity": "warn", "verdict": "百科式设定倾倒", "pattern": "单章 axis_advance 数量 > 4 且全部无 cost_paid"}
+      ]
+    },
+    "literary": {
+      "label": "严肃文学",
+      "progression_axes_vocab": ["价值冲突", "关系", "认知", "自我理解"],
+      "structural_rules": [
+        {"id": "LITE-01", "scope": "volume", "severity": "warn", "rule": "每卷至少 1 次认知或价值冲突轴的 axis_advance"}
+      ],
+      "avoid_move_detectors": [
+        {"id": "LITE-A1", "severity": "warn", "verdict": "抽象抒情替代事件选择", "pattern": "连续 3 章全部 axis_advance 无 cost_paid 且无具体事件变化"}
+      ]
+    },
+    "mixed": {
+      "label": "混合题材",
+      "progression_axes_vocab": [],
+      "$comment": "mixed 的词表在运行时取 primary 声明的实际题材并集；primary 必须落在其余 9 个类型上"
+    }
+  },
+  "hook_types": {
+    "$comment": "continue_reason.hook_type 封闭枚举（P4 商业层）；高拉力集合用于前三章断言，仅在导入对标节奏包后启用",
+    "enum": ["危机", "悬念", "反转", "期待", "情感", "兑现", "代价"],
+    "high_pull": ["危机", "悬念", "反转"]
+  }
+}

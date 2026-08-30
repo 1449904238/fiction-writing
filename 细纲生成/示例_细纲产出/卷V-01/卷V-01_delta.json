@@ -1,0 +1,92 @@
+{
+  "contract_version": "volume.1",
+  "volume": "V-01",
+  "aggregated_at": "2026-08-23T12:32:34.277Z",
+  "chapter_count": 1,
+  "chapters": [
+    {
+      "chapter": 1,
+      "sync_status": "manual",
+      "delta": {
+        "character_states": [
+          {
+            "id": "char-guyan",
+            "location": "验尸房档案室",
+            "physical": "无伤",
+            "mental": "越紧张越只报物证编号；盯封存记录可疑折角",
+            "alive": true,
+            "inventory_has": [
+              "验尸房钥匙",
+              "封存记录(完整有折角)"
+            ]
+          },
+          {
+            "id": "char-linshuang",
+            "location": "验尸房门口",
+            "physical": "无伤",
+            "mental": "攥半张照片未开口，先要证据",
+            "alive": true,
+            "inventory_has": [
+              "半张照片(未出示)"
+            ]
+          },
+          {
+            "id": "char-zhouheng",
+            "location": "冷藏柜C-07",
+            "physical": "尸体",
+            "alive": false
+          }
+        ],
+        "number_anchors_updated": {
+          "冷藏柜编号": "C-07",
+          "故事第几天": 1,
+          "周衡殉职年数": 3
+        },
+        "foreshadowing_ops": [
+          {
+            "id": "FS-001",
+            "action": "plant",
+            "summary": "冷藏柜\"失踪\"尸体与殉职火化记录矛盾，复核可验证尸体身份"
+          },
+          {
+            "id": "FS-002",
+            "action": "plant",
+            "summary": "林霜发现船只离港记录与记录不符，持有未公开监控照片"
+          }
+        ],
+        "knowledge_boundary_updates": [
+          {
+            "character_id": "char-guyan",
+            "newly_known": [
+              "冷藏柜多出标'失踪'的尸体正是周衡",
+              "封存记录写的是'已火化'故矛盾",
+              "封存记录完整但有可疑折角"
+            ],
+            "still_unknown": [
+              "档案室如何被动过手脚",
+              "具体是谁干了这件事",
+              "林霜手握船只记录矛盾"
+            ]
+          },
+          {
+            "character_id": "char-linshuang",
+            "newly_known": [
+              "船只离港时间与记录不符"
+            ],
+            "still_unknown": [
+              "封存记录折角的异常细节"
+            ]
+          }
+        ],
+        "timeline": {
+          "current_day": 1,
+          "note": "开卷：冷柜多尸，首条硬矛盾确立，内务介入"
+        }
+      },
+      "validation": {
+        "format_ok": true,
+        "errors": []
+      }
+    }
+  ]
+}

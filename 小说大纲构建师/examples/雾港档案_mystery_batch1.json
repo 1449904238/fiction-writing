@@ -1,0 +1,356 @@
+{
+  "contract_version": "1.3",
+  "outline_scope": "batch",
+  "source_revision": "wugang-dangan-v1",
+  "source_package_revision": "v1.0.0",
+  "source_trace": {
+    "document": "示例_设定包（《雾港档案》，设定架构师产出）",
+    "preserved": [
+      "前提：法医档案员顾衍发现一具本应“失踪”的尸体出现在验尸房，记录指向早已殉职的搭档周衡",
+      "读者承诺：每个线索都有可回溯的来源，推理建立在可验证物证上",
+      "主冲突：掩盖者用伪造时间锚点让封存档案失效，关键物证分散在验尸房/船务公司/商会账房",
+      "失败代价：顾衍被以“伪造档案”定罪，搭档之死成为悬案",
+      "人物：顾衍只信可验证物证、绝不口头背书；林霜先要证据再提问",
+      "规则：港口档案制度——验尸房档案必须附潮汐与船只记录作为时间锚点，无锚点作废",
+      "unlockable：顾衍公开承认封存记录有缺页，林霜才交出港口监控截图"
+    ],
+    "inferred": [
+      "新增推导：前三章以“用一份物证换一次复核资格”为单元循环",
+      "新增推导：扫描账房线索（clue-3）作为增强风险等级的存在性锚点"
+    ]
+  },
+  "input_package": {
+    "manifest_path": "示例_设定包/manifest.json",
+    "source_revision": "v1.0.0",
+    "contract_version": "1.0",
+    "files": ["00_创作简报.md", "01_设定元数据.json", "02_写作约束.json", "manifest.json", ".work/core_gate.json"]
+  },
+  "setting_refs": {
+    "character_ids": ["char-guyan", "char-linshuang"],
+    "location_ids": ["loc-morgue", "loc-dock"],
+    "faction_ids": ["fac-harbor"],
+    "rule_ids": [],
+    "resource_ids": []
+  },
+  "genre_profile": {
+    "primary": "mystery",
+    "secondary": [],
+    "reader_promise": "每次查证都获得一条可验证的物证，同时付出关系或安全代价，推理从不靠灵光一现。",
+    "progression_axes": ["证据链", "嫌疑模型", "风险等级"],
+    "must_deliver": ["物证来源与验证路径先行", "解释档案规则时改变主角可行选择", "每次回报伴随代价与反制"],
+    "avoid_moves": ["推理前用整段港口史解释档案制度", "用“瞳孔一缩”代替物证推进", "每章靠新线索碾压掩盖者"]
+  },
+  "commercial_profile": {
+    "platform": "番茄小说",
+    "assumption_flag": "editorial_assumption"
+  },
+  "story_threads": [
+    {
+      "id": "TH-001",
+      "line_id": "L-001",
+      "summary": "顾衍用可验证物证逐个推进核查，追查周衡“殉职”被伪造成灭口的真相",
+      "opened_chapter": "CH-0001",
+      "planned_resolution_chapter": null,
+      "status": "OPEN"
+    },
+    {
+      "id": "TH-002",
+      "line_id": "L-002",
+      "summary": "顾衍与林霜从信息不对称到共同担责，由公开承认缺页解锁监控截图",
+      "opened_chapter": "CH-0001",
+      "planned_resolution_chapter": null,
+      "status": "OPEN"
+    }
+  ],
+  "direction_gate": {
+    "premise": "法医档案员顾衍在整理旧案时，发现一具本应“失踪”的尸体出现在验尸房，而所有记录都指向他早已殉职的搭档周衡。",
+    "reader_promise": "每个线索都有可回溯的来源，主角的每次推理都建立在可验证的物证上，不靠灵光一现。",
+    "pitch": "一个只肯按物证编号办事的档案员，用潮汐锚点与火化单交叉验证，反追把殉职做成“失踪”假象的人。",
+    "opening_delivery": {
+      "first_500": "顾衍在验尸房例行核对冷藏柜时，发现多出一具标着“失踪”的尸体——正是搭档周衡，他当众调出三年前的封存记录，记录显示周衡已殉职火化。",
+      "first_3_chapters": [
+        "验尸房发现“失踪”尸体并公开调出封存记录，内务开始盯上顾衍",
+        "拒绝交出档案室钥匙，船务公司抛出“尸体是伪造”的说法",
+        "用一份潮汐记录换到尸检复核资格，代价是内务立案"
+      ]
+    },
+    "assumptions": ["editorial_assumption：前三章以“用一份物证换一次复核”为单元循环，不靠灵光一现"]
+  },
+  "story_engine": {
+    "theme_question": "追查真相，是否值得把每一个持有旧证据的人都拖下水？",
+    "protagonist": {
+      "goal": "查明搭档周衡之死的真相，洗清自己“伪造档案”的嫌疑",
+      "misbelief": "只要守住档案室，就能守住真相不被篡改",
+      "behavior": "越紧张越只报物证编号，不给任何人看完整推理",
+      "line_in_the_sand": "不伪造物证，不销毁任何原始记录"
+    },
+    "opponent": {
+      "goal": "掩盖周衡被害与三年前的走私账目，保住商会地位",
+      "resources": "内务立案渠道、商会账房、对档案锚点的伪造能力",
+      "plan": "先说“尸体是伪造”孤立顾衍，再借立案让复核无法按期完成",
+      "escalation": "从舆论压制（监守自盗）到内务立案再到逼迫林霜公开旧报道"
+    },
+    "ending_proof": {
+      "resolution_id": "RES-01",
+      "claim": "顾衍用火化单与尸体编号交叉验证，确认殉职记录被伪造，公开承认当年缺页并接受被孤立的代价。",
+      "choice": "公开缺页真相而非继续锁死档案室"
+    },
+    "escalation_ladder": [
+      {
+        "trigger": "顾衍用一份物证换到复核资格",
+        "choice": "以潮汐记录换取尸检复核资格",
+        "cost": "内务立案，复核在立案压力下推进",
+        "state_change": "顾衍从被调查的嫌疑人变为复核人",
+        "axis_refs": ["证据链", "风险等级"]
+      },
+      {
+        "trigger": "顾衍公开承认封存记录有缺页",
+        "choice": "当众承认缺页换取林霜交出监控截图",
+        "cost": "缺页事实进入公开记录，顾衍被彻底孤立",
+        "state_change": "从单人调查变为与林霜共同承担",
+        "axis_refs": ["证据链", "嫌疑模型"]
+      },
+      {
+        "trigger": "商会刷屏“监守自盗”压制顾衍",
+        "choice": "用可验证物证反击而非口头辩解",
+        "cost": "每次反击都消耗一份物证",
+        "state_change": "掩盖者被迫在证据和舆论之间取舍",
+        "axis_refs": ["嫌疑模型", "风险等级"]
+      }
+    ]
+  },
+  "narrative_lines": [
+    {"id": "L-001", "name": "真相核查主线", "type": "main", "purpose": "沿可验证物证逼近周衡“殉职”被伪造的真相"},
+    {"id": "L-002", "name": "孤儿证关系线", "type": "relationship", "purpose": "顾衍与林霜由信息不对称走向共同担责"}
+  ],
+  "volumes": [
+    {
+      "id": "V-01",
+      "chapter_start": 1,
+      "chapter_end": 3,
+      "promise": "读者看到一份物证如何换到一次复核资格，同时让内务更紧地盯上顾衍",
+      "goal": "用可验证物证拿到尸检复核资格，把周衡案从“失踪”推向“被伪造”",
+      "opposition": "商会以内务立案与“尸体是伪造”的说法锁死复核通道",
+      "choice": "拒绝交出全部底牌，用一份潮汐记录换复核资格",
+      "cost": "内务立案，每一份物证都伴随旧案浮出水面",
+      "state_change": "从被孤立的内务嫌疑人变为有复核资格但被立案调查的人",
+      "resolution_id": "RES-01",
+      "anchors": {"quarter": "AN-V01-Q1", "midpoint": "AN-V01-MID", "three_quarter": "AN-V01-Q3", "ending": "AN-V01-END"}
+    }
+  ],
+  "chapters": [
+    {
+      "id": "CH-0001",
+      "volume_id": "V-01",
+      "number": 1,
+      "purpose": "建立“失踪”尸体与封存记录的矛盾，迫使顾衍越权并暴露给内务",
+      "reader_emotion": "压抑中的惊觉：核对的日常里跳出一具本不该存在的尸体",
+      "emotion_source": "editorial_assumption",
+      "rhythm_function": "开局高能矛盾",
+      "narrative_line_ids": ["L-001", "L-002"],
+      "line_weights": {"L-001": 0.7, "L-002": 0.3},
+      "line_intersection": {"is_intersection": true, "line_ids": ["L-001", "L-002"], "reason": "林霜的报道身份在封存记录矛盾中同时触及主线与关系线"},
+      "anchor_tags": ["AN-V01-Q1"],
+      "axis_advance": [
+        {"axis": "证据链", "change": "冷藏柜多出的“失踪”尸体与封存记录的“殉职火化”形成第一条硬矛盾，案件转入记录欺诈调查", "cost_paid": "顾衍当众调档的行为被内务记录在案", "evidence": "CH-0001#gocs[0].state_change"},
+        {"axis": "风险等级", "change": "主角从例行档案员变为内务盯上的嫌疑人", "cost_paid": "复核资格成为下一目标，处置权被收走"}
+      ],
+      "gocs": [
+        {"goal": "按流程核对冷藏柜", "obstacle": "尸体标签与封存记录正面冲突", "choice": "当众调出三年前封存记录揭穿“殉职火化”", "state_change": "顾衍公开冲突成立，内务开始盯上他"}
+      ],
+      "scene_effects": [
+        {"scene_id": "V01-C01-S01", "reader_reaction": "惊觉的刺痛", "reader_question": "内务将如何处置这具“不该存在”的尸体"}
+      ],
+      "foreshadowing_ops": [
+        {"id": "FS-001", "action": "plant", "summary": "冷藏柜“失踪”尸体与封存记录的殉职火化矛盾"},
+        {"id": "FS-002", "action": "plant", "summary": "林霜在报道周衡殉职时发现船只记录对不上"}
+      ],
+      "state_delta": {
+        "entry_state": ["顾衍是验尸房档案员", "周衡三年前殉职并已火化", "封存记录完整"],
+        "trigger": "冷藏柜多出标着“失踪”的尸体、正是周衡",
+        "choice": "当众调出三年前封存记录",
+        "cost": "内务开始盯上顾衍",
+        "changed_state": ["顾衍从例行核对转为公开冲突", "内务介入"],
+        "new_obligations": ["应付内务把尸体当“伪造档案”的指控"],
+        "unresolved_pull": "内务将如何处置这具“不该存在”的尸体"
+      },
+      "thread_ops": [{"id": "TH-001", "action": "open", "effect": "真相核查以“失踪”尸体矛盾开启"}, {"id": "TH-002", "action": "open", "effect": "林霜的报道身份在封存记录矛盾中触及关系线"}],
+      "evidence_refs": ["setting-doc: 港口档案制度", "setting-doc: 验尸房"],
+      "continue_reason": {"hook_type": "危机", "text": "内务开始盯上顾衍，复核资格成为下一目标"}
+    },
+    {
+      "id": "CH-0002",
+      "volume_id": "V-01",
+      "number": 2,
+      "purpose": "顾衍拒绝交出钥匙并承受孤立，船务公司抛出“尸体是伪造”的说法",
+      "reader_emotion": "机会与孤立并存的确认感",
+      "emotion_source": "editorial_assumption",
+      "rhythm_function": "中点选择加压",
+      "narrative_line_ids": ["L-001", "L-002"],
+      "line_weights": {"L-001": 0.6, "L-002": 0.4},
+      "line_intersection": {"is_intersection": true, "line_ids": ["L-001", "L-002"], "reason": "林霜在船务公司发现船只记录对不上，把信息不对称摆上台面"},
+      "anchor_tags": ["AN-V01-MID"],
+      "axis_advance": [
+        {"axis": "证据链", "change": "船只离港时间与记录不符，证明船只记录可能被篡改，需港口自动记录交叉验证", "cost_paid": "林霜为查记录把报道身份搭进去", "evidence": "CH-0002#gocs[0].state_change"},
+        {"axis": "嫌疑模型", "change": "嫌疑从“顾衍监守自盗”转向“船务公司记录不可信”", "cost_paid": "船务公司以此反向指控顾衍“尸体是伪造”"}
+      ],
+      "gocs": [
+        {"goal": "保住档案室钥匙与复核可能", "obstacle": "内务与船务都要求顾衍交出钥匙或承认伪造", "choice": "拒绝交出钥匙，守住档案室", "state_change": "顾衍被孤立，船务公司认定他为伪造主体"}
+      ],
+      "scene_effects": [
+        {"scene_id": "V01-C02-S01", "reader_reaction": "松口气又悬着", "reader_question": "拒绝交钥匙后顾衍还有没有别的出路"}
+      ],
+      "foreshadowing_ops": [
+        {"id": "FS-002", "action": "advance", "summary": "林霜在船务公司发现当天的船只离港时间与记录不符"}
+      ],
+      "state_delta": {
+        "entry_state": ["顾衍从例行核对转为公开冲突", "内务开始盯上顾衍", "顾衍未交钥匙"],
+        "trigger": "内务与船务公司要求交钥匙或承认伪造",
+        "choice": "拒绝交出档案室钥匙",
+        "cost": "顾衍被孤立，船务公司认定尸体为伪造",
+        "changed_state": ["顾衍守住档案室但被孤立", "船务公司成为对立面"],
+        "new_obligations": ["找一条不靠钥匙的复核路径"],
+        "unresolved_pull": "拒绝交钥匙后顾衍还有没有别的出路"
+      },
+      "thread_ops": [{"id": "TH-001", "action": "advance", "effect": "守住钥匙的同时引入船务公司对立面"}],
+      "evidence_refs": ["setting-doc: 船只记录", "setting-doc: 船务公司码头"],
+      "continue_reason": {"hook_type": "悬念", "text": "船务公司的“尸体是伪造”说法需要一个用潮汐记录换复核的反转"}
+    },
+    {
+      "id": "CH-0003",
+      "volume_id": "V-01",
+      "number": 3,
+      "purpose": "顾衍用一份潮汐记录换到尸检复核资格，代价是内务立案",
+      "reader_emotion": "带代价的递进达成感",
+      "emotion_source": "editorial_assumption",
+      "rhythm_function": "卷末公开压力",
+      "narrative_line_ids": ["L-001", "L-002"],
+      "line_weights": {"L-001": 0.5, "L-002": 0.5},
+      "line_intersection": {"is_intersection": true, "line_ids": ["L-001", "L-002"], "reason": "复核资格由物证换来，而林霜的证词价值被推到台前"},
+      "anchor_tags": ["AN-V01-Q3", "AN-V01-END"],
+      "axis_advance": [
+        {"axis": "证据链", "change": "用潮汐记录换到尸检复核资格，复核可验证尸体是否为周衡", "cost_paid": "内务正式立案，复核在立案压力下推进", "evidence": "CH-0003#gocs[0].state_change"},
+        {"axis": "嫌疑模型", "change": "嫌疑从「船务公司伪造记录」进一步指向「掩盖者借商会账房操纵证据」，商会成为重点对象", "cost_paid": "商会刷屏“监守自盗”，顾衍必须在舆论中坚持物证", "evidence": "CH-0003#scene_effects[0].reader_question"},
+        {"axis": "风险等级", "change": "顾衍从被调查的嫌疑人变为复核人，同时内务立案把风险推向公开化", "cost_paid": "公开缺页带来的孤立代价开始显现"}
+      ],
+      "gocs": [
+        {"goal": "拿到复核资格验证尸体身份", "obstacle": "内务立案与商会施压", "choice": "用一份潮汐记录换复核资格", "state_change": "顾衍从被调查者变为复核人，同时立案缠身"}
+      ],
+      "scene_effects": [
+        {"scene_id": "V01-C03-S01", "reader_reaction": "暂时松了口气、知道要开始还", "reader_question": "立案下尸检复核能否按期完成"}
+      ],
+      "foreshadowing_ops": [
+        {"id": "FS-001", "action": "advance", "summary": "复核资格由潮汐记录换得，尸体编号与火化单将进入交叉验证"},
+        {"id": "FS-003", "action": "plant", "summary": "码头监控出现未登记车辆，指向有人转移尸体"}
+      ],
+      "state_delta": {
+        "entry_state": ["顾衍守住档案室但被孤立", "船务公司认定尸体为伪造", "林霜掌握船只记录矛盾"],
+        "trigger": "内务立案与商会施压同时到来",
+        "choice": "用一份潮汐记录换尸检复核资格",
+        "cost": "内务立案，复核在立案压力下推进",
+        "changed_state": ["顾衍从被调查者变为复核人", "立案缠身"],
+        "new_obligations": ["在立案期限内完成复核", "应对“监守自盗”舆论"],
+        "unresolved_pull": "立案下尸检复核能否按期完成，以及林霜何时交出监控截图"
+      },
+      "thread_ops": [{"id": "TH-001", "action": "advance", "effect": "真相核查从换复核推进到复核合法化"}],
+      "evidence_refs": ["setting-doc: 潮汐记录", "setting-doc: 码头监控"],
+      "continue_reason": {"hook_type": "代价", "text": "拿到复核资格的同时立案定下期限，下一卷必须回答复核能否按期完成"}
+    }
+  ],
+  "foreshadowing": [
+    {
+      "id": "FS-001",
+      "summary": "冷藏柜“失踪”尸体与封存记录的殉职火化矛盾；复核可验证尸体身份",
+      "type": "物证",
+      "importance": "P0",
+      "source_clue": "clue-1",
+      "plant_chapter": "CH-0001",
+      "planned_harvest": null,
+      "harvest_effect": "确认殉职记录被伪造，逼顾衍公开缺页",
+      "status": "ADVANCE"
+    },
+    {
+      "id": "FS-002",
+      "summary": "林霜手中的船只记录冲突；公开承认缺页后才交出港口监控截图",
+      "type": "信息",
+      "importance": "P1",
+      "source_clue": "clue-2",
+      "plant_chapter": "CH-0001",
+      "planned_harvest": null,
+      "harvest_effect": "解锁转移尸体的码头监控，让林霜从旁观变为共担",
+      "status": "ADVANCE"
+    },
+    {
+      "id": "FS-003",
+      "summary": "码头监控出现未登记车辆，指向有人转移尸体",
+      "type": "物证",
+      "importance": "P1",
+      "source_clue": "clue-3",
+      "plant_chapter": "CH-0003",
+      "planned_harvest": null,
+      "harvest_effect": "把掩盖者从“伪造档案”引向商会账房",
+      "status": "PLANT"
+    }
+  ],
+  "entity_ledger": {
+    "entities": [
+      {
+        "id": "ENT-001",
+        "name": "失踪尸体",
+        "type": "item",
+        "critical_facts": [
+          {"chapter": 1, "fact": "冷藏柜多出一具标着“失踪”的尸体，与殉职火化记录矛盾", "status": "active", "evidence": "CH-0001 gocs.state_change"},
+          {"chapter": 3, "fact": "复核资格获得，尸体编号与火化单将进入交叉验证", "status": "active"}
+        ]
+      },
+      {
+        "id": "ENT-002",
+        "name": "验尸房钥匙",
+        "type": "item",
+        "critical_facts": [
+          {"chapter": 1, "fact": "顾衍守住验尸房钥匙，每次使用留下记录", "status": "active"},
+          {"chapter": 2, "fact": "顾衍拒绝交出钥匙，被孤立", "status": "active"}
+        ]
+      },
+      {
+        "id": "ENT-003",
+        "name": "港口监控截图",
+        "type": "item",
+        "critical_facts": [
+          {"chapter": 1, "fact": "林霜持有当天监控截图，未公开", "status": "active"}
+        ]
+      }
+    ]
+  },
+  "branch_nodes": [
+    {
+      "id": "BN-01-03",
+      "chapter_id": "CH-0003",
+      "type": "decision",
+      "decision": "要不要用一份潮汐记录换尸检复核资格",
+      "selected": {
+        "beats": ["给出潮汐记录", "换到复核资格", "接受内务立案"],
+        "short_term": "拿到复核资格但被立案",
+        "mid_term": "复核在立案压力下推进",
+        "long_term": "真相核查合法化，为公开缺页埋伏笔",
+        "risks": ["商会继续刷“监守自盗”舆论"]
+      },
+      "alternatives": [
+        {"name": "坚持不换", "consequence": "复核无法推进，尸体身份永远成谜"}
+      ],
+      "selection_reason": "主题要求真相建立在可验证物证上，主角必须为每一次换证付出可见代价"
+    }
+  ],
+  "open_decisions": [
+    {
+      "question": "林霜何时公开承认顾衍的缺页并交出监控截图？",
+      "blocks": "关系线从信息不对称进入正面承担",
+      "owner": "作者"
+    },
+    {
+      "question": "复核能否在内务立案下按期完成？",
+      "blocks": "下一卷核心冲突与期限推进",
+      "owner": "作者"
+    }
+  ]
+}

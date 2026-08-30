@@ -1,0 +1,13 @@
+{
+  "kind": "urban",
+  "data": {
+    "resource_topology": [{"resource": "客户资料原件", "controller_id": "char-lin", "access_gate": "办公室签字", "price": "抵押住房", "story_leverage": "可证清白"}],
+    "social_positions": [{"character_id": "char-lin", "position": "停职项目经理", "available_leverage": "客户信任", "institutional_boundary": "无签字权"}],
+    "pressure_system": {"debt": "七日债务到期", "reputation": "行业黑名单风险", "deadline": "三日内续签"},
+    "mobility_events": [
+      {"trigger": "债主登门", "gain": "延期三日", "loss": "失去客户"},
+      {"trigger": "公开账本", "gain": "洗清嫌疑", "loss": "暴露抵押"},
+      {"trigger": "拿到续签", "gain": "重获签字权", "loss": "承担连带责任"}
+    ]
+  }
+}

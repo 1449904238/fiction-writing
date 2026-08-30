@@ -1,0 +1,24 @@
+{
+  "receipt_version": "1.1",
+  "status": "passed",
+  "generated_at": "2026-08-23T08:20:24.746076+00:00",
+  "source_outline": "C:\\Users\\14499\\Desktop\\小说\\skill\\作家\\小说大纲构建师\\示例_大纲产出\\01_大纲数据.json",
+  "contract_version": "1.3",
+  "source_revision": "wugang-dangan-v1",
+  "outline_scope": "batch",
+  "chapter_count": 3,
+  "gates": {
+    "validator": "passed",
+    "projector": "skipped",
+    "continuity_ledger": "written",
+    "cross_batch": "skipped"
+  },
+  "warnings": [],
+  "cross_batch_warnings": [],
+  "artifacts": {
+    "continuity_ledger": {
+      "path": "C:\\Users\\14499\\Desktop\\小说\\skill\\作家\\小说大纲构建师\\示例_大纲产出\\03_连续性账本.json",
+      "sha256": "2b0a0e29460163c83632bc7d4a4742a0d7014e3170fefd7b6d63f59d627843fe"
+    }
+  }
+}

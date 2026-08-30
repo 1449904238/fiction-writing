@@ -1,0 +1,108 @@
+{
+  "ledger_version": "1.1",
+  "contract_version": "1.3",
+  "source_revision": "dangan-yujin-v2",
+  "outline_scope": "batch",
+  "last_chapter_number": 5,
+  "open_threads": [],
+  "foreshadowing_snapshot": {
+    "FS-001": "ADVANCE",
+    "FS-002": "ADVANCE",
+    "FS-003": "ADVANCE"
+  },
+  "entity_terminal": [],
+  "chapters": [
+    {
+      "chapter_id": "CH-0004",
+      "chapter": 4,
+      "volume_id": "V-02",
+      "entry_state": [
+        "沈砚重新获得一家合作方",
+        "处理诉讼对家人担保债务的牵连",
+        "档案旧账波及旧同事的后果"
+      ],
+      "trigger": "恒信律师函要求披露档案来源",
+      "choice": "以部分程序性文件换取管辖异议成立",
+      "cost": "披露义务保留，档案来源暴露在程序风险下",
+      "changed_state": [
+        "管辖异议成立，应诉转入程序对抗",
+        "第一位前同事被约谈"
+      ],
+      "new_obligations": [
+        "决定是否动用档案保住前同事"
+      ],
+      "continuity_break": false,
+      "continuity_note": "",
+      "unresolved_pull": "递话的恒信内部人是谁",
+      "thread_events": [
+        {
+          "thread_id": "TH-001",
+          "chapter_id": "CH-0004",
+          "chapter": 4,
+          "action": "advance",
+          "effect": "应诉反制与档案代价具体化同时推进"
+        }
+      ],
+      "active_threads_after": []
+    },
+    {
+      "chapter_id": "CH-0005",
+      "chapter": 5,
+      "volume_id": "V-02",
+      "entry_state": [
+        "管辖异议成立，应诉转入程序对抗",
+        "第一位前同事被约谈",
+        "决定是否动用档案保住前同事"
+      ],
+      "trigger": "前同事在约谈压力下动摇",
+      "choice": "动用一份档案保住前同事",
+      "cost": "档案剩10份，调用路径被恒信记录",
+      "changed_state": [
+        "前同事解除约谈压力",
+        "夏昭摊牌条件浮出水面"
+      ],
+      "new_obligations": [
+        "在下批与夏昭的见面中答复认责书条件"
+      ],
+      "continuity_break": false,
+      "continuity_note": "",
+      "unresolved_pull": "恒信内部分歧会不会成为反制通道",
+      "thread_events": [
+        {
+          "thread_id": "TH-001",
+          "chapter_id": "CH-0005",
+          "chapter": 5,
+          "action": "advance",
+          "effect": "底线兑现使信誉与档案进一步脱钩，摊牌条件上桌"
+        }
+      ],
+      "active_threads_after": []
+    }
+  ],
+  "story_threads": [
+    {
+      "definition": {
+        "id": "TH-001",
+        "line_id": "L-001",
+        "summary": "沈砚以档案残片为筹码，逐个换回市场准入并追查恒信封杀机制",
+        "opened_chapter": "CH-0001",
+        "planned_resolution_chapter": null,
+        "status": "OPEN"
+      },
+      "history": [
+        {
+          "chapter_id": "CH-0004",
+          "chapter": 4,
+          "action": "advance",
+          "effect": "应诉反制与档案代价具体化同时推进"
+        },
+        {
+          "chapter_id": "CH-0005",
+          "chapter": 5,
+          "action": "advance",
+          "effect": "底线兑现使信誉与档案进一步脱钩，摊牌条件上桌"
+        }
+      ]
+    }
+  ]
+}

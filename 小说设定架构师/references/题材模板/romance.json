@@ -1,0 +1,14 @@
+{
+  "kind": "romance",
+  "data": {
+    "core_pair": {"a_id": "char-lin", "b_id": "char-su", "current_relation": "决裂前合伙人", "what_each_needs": "林真需要被信任，苏宁需要信任人", "what_each_fears": "再次被留下", "relationship_boundary": "不隐瞒财务"},
+    "relational_contract": {"current_terms": "只为项目合作", "benefit": "共同减少损失", "avoidance": "回避旧日垫款责任"},
+    "beats": [
+      {"event": "解除协议被递出", "expectation_broken": "以为对方会直接离开", "choice": "共同签字延期", "emotional_cost": "承认仍需要对方", "new_relation_state": "暂时同盟"},
+      {"event": "债主登门", "expectation_broken": "以为苏宁泄密", "choice": "共同担责", "emotional_cost": "暴露住房抵押", "new_relation_state": "互相保护"},
+      {"event": "账本丢失", "expectation_broken": "以为信任已恢复", "choice": "公开备份", "emotional_cost": "失去客户", "new_relation_state": "坦白"},
+      {"event": "真相指向内部", "expectation_broken": "以为项目能挽回", "choice": "共同承担责任", "emotional_cost": "放弃控制", "new_relation_state": "平等合伙"}
+    ],
+    "external_pressure": {"force": "七日债务合同", "deadline": "七日内续签", "cost": "失去公司与信誉"}
+  }
+}

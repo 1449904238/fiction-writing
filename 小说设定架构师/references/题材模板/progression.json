@@ -1,0 +1,12 @@
+{
+  "kind": "progression",
+  "data": {
+    "rules": [{"mechanism": "以体温换火源", "boundary": "单次不超过三息", "cost": "肢体失温", "failure_result": "经脉冻伤三日"}],
+    "stages": [
+      {"name": "余烬", "entry_condition": "残火初觉醒", "new_capability": "点燃可燃物", "cannot_do": "不能离体燃烧", "maintenance_cost": "每日温养", "story_pressure": "矿洞唯一热源"},
+      {"name": "持火", "entry_condition": "通过第一次试炼", "new_capability": "火线离体三尺", "cannot_do": "不能连续越阶", "maintenance_cost": "左手持续失温", "story_pressure": "可进入内矿区"}
+    ],
+    "cross_stage_exceptions": [{"allowed_when": "以经脉裂痕为代价", "price": "三日虚弱", "maximum_gap": "仅可越一阶", "not_allowed_when": "无火源补充时"}],
+    "protagonist_route": {"starting_stage": "余烬", "milestones": "持火-控火-破境", "blocked_by": "配额不足与反噬累积"}
+  }
+}

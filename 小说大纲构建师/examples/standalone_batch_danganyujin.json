@@ -1,0 +1,329 @@
+{
+  "contract_version": "1.3",
+  "outline_scope": "batch",
+  "source_revision": "dangan-yujin-v1",
+  "source_trace": {
+    "document": "示例_完整设定包（《档案余烬》）",
+    "preserved": [
+      "一句前提：被行业封杀的项目经理沈砚，握着截留的客户底档重返市场",
+      "读者承诺：主角每一次翻身都建立在可验证的代价上，不用巧合和对手降智",
+      "主冲突引擎：三个月内重建信誉，夺回被恒信占有的项目",
+      "失败代价：永久退出行业并连累家人担保债务",
+      "人物：沈砚握12份底档，已烧1份；底线是不伪造证据、不拖前同事下水",
+      "角色关系：夏昭是恒信前法务，唯一旁证；她持有认责书会议记录，沈砚不知情",
+      "规则：行业信用档案制度，只能记录已判决或已仲裁事实；负面记录让主角三年不能任项目负责人",
+      "地点：旧档案室已封存，每次进入都留下访问记录",
+      "势力：恒信依赖封杀机制维持市场地位，只能通过合同、仲裁和舆论手段施压",
+      "不可逆事实：封杀记录已公开"
+    ],
+    "inferred": [
+      "新增推导：前三章以“用一次档案换一次准入”为单元循环",
+      "新增推导：首个单元的回报对象设定为一家愿意给出准入机会的新公司"
+    ]
+  },
+  "setting_refs": {
+    "character_ids": [],
+    "location_ids": [],
+    "faction_ids": [],
+    "rule_ids": [],
+    "resource_ids": []
+  },
+  "genre_profile": {
+    "primary": "urban",
+    "secondary": [],
+    "reader_promise": "主角每一次翻身都建立在可验证的代价上：用一份档案换一次准入，同时烧掉一段旧日信任。",
+    "progression_axes": ["资源", "声誉", "关系"],
+    "must_deliver": ["每次调用档案前先展示具体代价和对手反应", "解释规则时改变主角可行选择", "获得准入必然引来反制"],
+    "avoid_moves": ["用整段行业史解释信用制度", "每章靠新档案碾压对手", "用“眼神一沉”代替策略推进"]
+  },
+  "commercial_profile": {
+    "platform": "示例平台（无对标数据时不得虚构来源）",
+    "assumption_flag": "editorial_assumption"
+  },
+  "story_threads": [
+    {
+      "id": "TH-001",
+      "line_id": "L-001",
+      "summary": "沈砚以档案残片为筹码，逐个换回市场准入并追查恒信封杀机制",
+      "opened_chapter": "CH-0001",
+      "planned_resolution_chapter": null,
+      "status": "OPEN"
+    }
+  ],
+  "direction_gate": {
+    "premise": "被行业封杀的项目经理沈砚握着12份客户底档重返市场，但每调用一份，就有一份旧日信任被烧掉；他必须在三个月内重建信誉，夺回被恒信占有的项目。",
+    "reader_promise": "主角每一次翻身都建立在可验证的代价上，不用巧合、不用运气、不用对手突然降智。",
+    "pitch": "一个只肯用书面条款交换条件的落魄项目经理，用前东家掩埋的验收漏洞记录，一场场换回被资本锁死的市场席位。",
+    "opening_delivery": {
+      "first_500": "恒信在行业封杀会上当面宣布沈砚永不录用；沈砚当众抽出一页被恒信掩埋的验收漏洞记录，让恒信正在竞标的方案当场作废，赢回一分钟谈判席位，也烧掉了第一份信任筹码。",
+      "first_3_chapters": [
+        "封杀会翻盘，赢回谈判席位并被恒信法务盯上",
+        "新公司抛出橄榄枝要求交出全部底牌，沈砚拒绝",
+        "用一个零底牌承诺拿到边缘项目，代价是恒信诉讼立案"
+      ]
+    },
+    "assumptions": ["editorial_assumption：前三章以“用一次档案换一次准入”为单元循环，不做降智碾压"]
+  },
+  "story_engine": {
+    "theme_question": "靠掌握秘密重建信誉，代价是不是把所有人拉下水？",
+    "protagonist": {
+      "goal": "三个月内重建信誉，拿回被恒信占有的项目",
+      "misbelief": "只要掌握足够多的秘密，就能保护所有人",
+      "behavior": "越紧张越把信息拆成碎片，谈判先报条件再报代价",
+      "line_in_the_sand": "不伪造证据，不把前同事拖下水"
+    },
+    "opponent": {
+      "goal": "维持行业封杀机制以保护市场地位",
+      "resources": "黑名单、诉讼资源、资本；恒信内部流程记忆被沈砚反向掌握",
+      "plan": "用诉讼立案和负面记录刷屏封死沈砚的准入机会",
+      "escalation": "从舆论封杀升级到仲裁取证，再升级到逼迫夏昭公开当年顶罪记录"
+    },
+    "ending_proof": {
+      "resolution_id": "RES-01",
+      "claim": "沈砚用可验证的验收记录废墟重建信任，公开承认当年替恒信顶罪，接受旧同事可能恨自己的代价。",
+      "choice": "在庭外公开承认顶罪换取夏昭证词，而不是把证据继续握在手里"
+    },
+    "escalation_ladder": [
+      {
+        "trigger": "封杀会当面宣布永不录用",
+        "choice": "当众拿出一页验收漏洞记录作废恒信竞标",
+        "cost": "烧掉第一份信任筹码，恒信法务开始盯人",
+        "state_change": "沈砚重返谈判桌且被恒信法务盯上",
+        "axis_refs": ["声誉"]
+      },
+      {
+        "trigger": "恒信发起诉讼立案并刷负面记录",
+        "choice": "拒绝交出全部底牌，用一个零底牌承诺拿到边缘项目",
+        "cost": "档案只剩11份，代价上限未明确",
+        "state_change": "沈砚获得一个自担风险的项目准入",
+        "axis_refs": ["资源"]
+      },
+      {
+        "trigger": "恒信转而逼迫前法务夏昭交出认责书记录",
+        "choice": "放弃档案自保，公开承认当年顶罪",
+        "cost": "牵连旧同事并失去利用秘密的筹码",
+        "state_change": "信誉重建从私下交易转向公开清算",
+        "axis_refs": ["声誉", "关系"]
+      }
+    ]
+  },
+  "narrative_lines": [
+    {"id": "L-001", "name": "信誉重建主线", "type": "main", "purpose": "沿“档案换准入 → 旧账曝光 → 反制”逼近拿回恒信所占项目"},
+    {"id": "L-002", "name": "夏昭关系线", "type": "relationship", "purpose": "沈砚需要她的证词，她需要他承认顶罪，隐藏不对称决定终局"}
+  ],
+  "volumes": [
+    {
+      "id": "V-01",
+      "chapter_start": 1,
+      "chapter_end": 3,
+      "promise": "读者看到一份档案如何换来一次准入，同时烧掉一段信任",
+      "goal": "在恒信封杀下拿到第一个可自担风险的项目准入",
+      "opposition": "恒信用黑名单、诉讼资源和资本锁死准入通道",
+      "choice": "拒绝交出全部底牌，用一个零底牌承诺接边缘项目",
+      "cost": "恒信诉讼立案，档案代价上限未知",
+      "state_change": "从被全行业封杀转变为有一家合作、同时被诉讼缠身",
+      "resolution_id": "RES-01",
+      "anchors": {
+        "quarter": "AN-V01-Q1",
+        "midpoint": "AN-V01-MID",
+        "three_quarter": "AN-V01-Q3",
+        "ending": "AN-V01-END"
+      }
+    }
+  ],
+  "chapters": [
+    {
+      "id": "CH-0001",
+      "volume_id": "V-01",
+      "number": 1,
+      "purpose": "封杀会翻盘并烧掉第一份信任筹码",
+      "reader_emotion": "压抑里的第一声落地：当众拿出一页证据反转席位",
+      "emotion_source": "editorial_assumption",
+      "rhythm_function": "开局高能反击",
+      "narrative_line_ids": ["L-001", "L-002"],
+      "line_weights": {"L-001": 0.7, "L-002": 0.3},
+      "line_intersection": {"is_intersection": true, "line_ids": ["L-001", "L-002"], "reason": "夏昭在封杀会内的旁证身份同时激活信誉线与关系线"},
+      "anchor_tags": ["AN-V01-Q1"],
+      "axis_advance": [
+        {"axis": "资源", "change": "烧掉第一份信任筹码，换回一分钟谈判席位", "cost_paid": "恒信法务开始盯人，档案筹码从12份减到11份", "evidence": "CH-0001#gocs[0].state_change"},
+        {"axis": "声誉", "change": "从被全行业宣布永不录用，到让恒信竞标当场作废", "cost_paid": "当众与恒信撕破脸，失去行业内最后回旋余地"},
+        {"axis": "关系", "change": "夏昭在封杀会上的旁证身份浮出水面", "cost_paid": "夏昭注意到沈砚手中的牌比她预期的多"}
+      ],
+      "gocs": [
+        {"goal": "在封杀会上保住谈判席位", "obstacle": "恒信当众宣布永不录用且全场认可", "choice": "抽出一页验收漏洞记录当场作废恒信竞标", "state_change": "沈砚重返谈判桌，同时烧掉第一份信任筹码"}
+      ],
+      "scene_effects": [
+        {"scene_id": "V01-C01-S01", "reader_reaction": "扬眉吐气的刺痛", "reader_question": "这一页记录是谁给沈砚的，代价要多久兑现"}
+      ],
+      "foreshadowing_ops": [
+        {"id": "FS-001", "action": "plant", "summary": "夏昭手里留有沈砚当年签认责书的会议记录"},
+        {"id": "FS-002", "action": "plant", "summary": "档案还剩11份，但调用代价的上限没有明确"}
+      ],
+      "state_delta": {
+        "entry_state": ["沈砚被行业封杀", "手握12份客户底档", "恒信在竞标"],
+        "trigger": "封杀会当面宣布永不录用",
+        "choice": "当众抽出一页验收漏洞记录",
+        "cost": "烧掉一份信任筹码，恒信法务开始盯人",
+        "changed_state": ["沈砚赢回一分钟谈判席位", "恒信竞标当场作废"],
+        "new_obligations": ["应付恒信法务取证", "查明是哪份档案的旧账最先反噬"],
+        "unresolved_pull": "新公司会在什么条件下给沈砚准入"
+      },
+      "thread_ops": [{"id": "TH-001", "action": "open", "effect": "信誉重建线以“档案换准入”单元开启"}],
+      "evidence_refs": ["setting-doc: 行业信用档案制度", "setting-doc: 封杀会"],
+      "continue_reason": {"hook_type": "反转", "text": "赢回席位只是入场，恒信法务已锁定沈砚的下一张牌"}
+    },
+    {
+      "id": "CH-0002",
+      "volume_id": "V-01",
+      "number": 2,
+      "purpose": "新公司抛出橄榄枝，沈砚拒绝交出全部底牌",
+      "reader_emotion": "机会与警惕并存的确认感",
+      "emotion_source": "editorial_assumption",
+      "rhythm_function": "中点选择加压",
+      "narrative_line_ids": ["L-001", "L-002"],
+      "line_weights": {"L-001": 0.6, "L-002": 0.4},
+      "line_intersection": {"is_intersection": true, "line_ids": ["L-001", "L-002"], "reason": "新公司的邀约把沈砚的准入和夏昭的证词摆到同一张桌上"},
+      "anchor_tags": ["AN-V01-MID"],
+      "axis_advance": [
+        {"axis": "资源", "change": "拒绝全交底牌，以零底牌承诺换取边缘项目准入", "cost_paid": "只能接边缘项目，且恒信诉讼立案", "evidence": "CH-0002#gocs[0].state_change"},
+        {"axis": "关系", "change": "夏昭的质问让两人的信息不对称显性化", "cost_paid": "沈砚必须在下次见面时决定是否坦白档案来源"}
+      ],
+      "gocs": [
+        {"goal": "拿到一个不被吞掉全部档案的项目准入", "obstacle": "新公司要求交出全部底牌，否则不谈", "choice": "拒绝全交，给出一个只用承诺不用档案的零底牌方案", "state_change": "合作从谈条件变成赌信任，代价是只能接边缘项目"}
+      ],
+      "scene_effects": [
+        {"scene_id": "V01-C02-S01", "reader_reaction": "松口气又悬着", "reader_question": "零底牌承诺有没有可能就是夏昭视角里的又一次逃避"}
+      ],
+      "foreshadowing_ops": [
+        {"id": "FS-001", "action": "advance", "summary": "夏昭问沈砚：你这次又要拿谁顶罪"}
+      ],
+      "state_delta": {
+        "entry_state": ["沈砚赢回一分钟谈判席位", "应付恒信法务取证", "手握11份档案可拆用"],
+        "trigger": "新公司要求交出全部底档作为合作前提",
+        "choice": "拒绝全交，给出零底牌承诺",
+        "cost": "只能接边缘项目，且恒信诉讼立案",
+        "changed_state": ["沈砚获得一个自担风险的项目准入"],
+        "new_obligations": ["短期内交付边缘项目自证信誉", "应对诉讼立案"],
+        "unresolved_pull": "夏昭会在什么时候把认责书记录摊到桌面上"
+      },
+      "thread_ops": [{"id": "TH-001", "action": "advance", "effect": "准入机制切换为“信誉赌注”而非“档案碾压”"}],
+      "evidence_refs": ["setting-doc: 负面信用记录使主角不能再任项目负责人"],
+      "continue_reason": {"hook_type": "悬念", "text": "拿到项目准入的同时，恒信诉讼立案使每一个后续动作都可能变成新罪名"}
+    },
+    {
+      "id": "CH-0003",
+      "volume_id": "V-01",
+      "number": 3,
+      "purpose": "用一个零底牌承诺完成边缘项目交付，代价是恒信正式发难",
+      "reader_emotion": "带着风险的递交完成感",
+      "emotion_source": "editorial_assumption",
+      "rhythm_function": "卷末公开压力",
+      "narrative_line_ids": ["L-001", "L-002"],
+      "line_weights": {"L-001": 0.5, "L-002": 0.5},
+      "line_intersection": {"is_intersection": true, "line_ids": ["L-001", "L-002"], "reason": "边缘项目交付成功让沈砚首次被市场重新看见，也把夏昭的证词价值推到台前"},
+      "anchor_tags": ["AN-V01-Q3", "AN-V01-END"],
+      "axis_advance": [
+        {"axis": "声誉", "change": "零底牌完成边缘项目交付，重新获得一家合作方", "cost_paid": "信誉只够维持一个合作，诉讼风险全部积压", "evidence": "CH-0003#gocs[0].state_change"},
+        {"axis": "资源", "change": "档案旧账开始波及前同事，调用代价从抽象上限变成具体的人", "cost_paid": "旧同事的职业生涯被卷入反噬风险"}
+      ],
+      "gocs": [
+        {"goal": "完成零底牌边缘项目并兑现承诺", "obstacle": "恒信在交付节点发起诉讼立案并刷负面记录", "choice": "不调用新档案，靠书面验收流程把项目做完", "state_change": "获得一家合作的同时被诉讼缠身，旧账曝光被拖到明处"}
+      ],
+      "scene_effects": [
+        {"scene_id": "V01-C03-S01", "reader_reaction": "暂时松了口气，知道下一章要还", "reader_question": "恒信下一步会用“顶罪”逼夏昭离职还是逼沈砚认罪"}
+      ],
+      "foreshadowing_ops": [
+        {"id": "FS-001", "action": "advance", "summary": "夏昭的来访者记录显示她已私下翻查旧档案室"},
+        {"id": "FS-002", "action": "advance", "summary": "档案只剩11份，其中一份的旧账开始波及前同事"}
+      ],
+      "state_delta": {
+        "entry_state": ["沈砚获得一个自担风险的项目准入", "应对诉讼立案", "夏昭尚未公开证词"],
+        "trigger": "交付节点恒信发起诉讼并刷负面记录",
+        "choice": "不用新档案，靠书面验收流程零底牌完成交付",
+        "cost": "信誉只够维持一个合作，档案代价上限仍未明确",
+        "changed_state": ["沈砚重新获得一家合作方"],
+        "new_obligations": ["处理诉讼对家人担保债务的牵连", "面对档案旧账波及旧同事的后果"],
+        "unresolved_pull": "夏昭会不会为了自保而交出认责书记录"
+      },
+      "thread_ops": [{"id": "TH-001", "action": "advance", "effect": "信誉重建从无人敢用推进到有一家合作，同时积压诉讼风险"}],
+      "evidence_refs": ["setting-doc: 旧档案室访问记录"],
+      "continue_reason": {"hook_type": "代价", "text": "重新入场的代价被量化成一场诉讼，而下一卷必须回答档案代价的上限在哪"}
+    }
+  ],
+  "foreshadowing": [
+    {
+      "id": "FS-001",
+      "summary": "夏昭持有沈砚当年签认责书的会议记录，双方互相不知道对方手里的牌",
+      "type": "关系信息",
+      "importance": "P0",
+      "plant_chapter": "CH-0001",
+      "planned_harvest": null,
+      "harvest_effect": "逼沈砚在庭外公开承认顶罪，重新定义他和夏昭的关系",
+      "status": "ADVANCE"
+    },
+    {
+      "id": "FS-002",
+      "summary": "档案还剩11份，但调用代价的上限没有明确",
+      "type": "规则边界",
+      "importance": "P1",
+      "plant_chapter": "CH-0001",
+      "planned_harvest": null,
+      "harvest_effect": "在终局明确主角不能再靠档案自保",
+      "status": "ADVANCE"
+    }
+  ],
+  "entity_ledger": {
+    "entities": [
+      {
+        "id": "ENT-001",
+        "name": "客户底档",
+        "type": "item",
+        "critical_facts": [
+          {"chapter": 1, "fact": "沈砚手握12份客户底档，封杀会上烧掉第一份", "status": "active", "evidence": "CH-0001 gocs.state_change"},
+          {"chapter": 2, "fact": "档案剩11份，拒绝向新公司交出全部底牌", "status": "active"},
+          {"chapter": 3, "fact": "零底牌完成交付，但档案旧账开始波及前同事", "status": "changed"}
+        ]
+      },
+      {
+        "id": "ENT-002",
+        "name": "认责书会议记录",
+        "type": "item",
+        "critical_facts": [
+          {"chapter": 1, "fact": "夏昭持有该记录，沈砚不知情", "status": "active"},
+          {"chapter": 3, "fact": "夏昭已私下翻查旧档案室，记录价值被推到台前", "status": "active"}
+        ]
+      }
+    ]
+  },
+  "branch_nodes": [
+    {
+      "id": "BN-01-02",
+      "chapter_id": "CH-0002",
+      "type": "decision",
+      "decision": "要不要交出全部底档换取新公司橄榄枝",
+      "selected": {
+        "beats": ["拒绝全交", "给出零底牌承诺", "接边缘项目"],
+        "short_term": "获得合作但只能接边缘项目",
+        "mid_term": "项目必须自证信誉，否则再无机会",
+        "long_term": "信誉与档案脱钩，为承认顶罪埋伏笔",
+        "risks": ["恒信可能封死边缘交付通道"]
+      },
+      "alternatives": [
+        {"name": "交出全部底档", "consequence": "合作更快但主角失去唯一筹码，变成被资本钳制的人"}
+      ],
+      "selection_reason": "主题要求主角不靠档案碾压重建信誉，必须先把优势与秘密剥离"
+    }
+  ],
+  "open_decisions": [
+    {
+      "question": "11份档案的调用代价上限会烧到什么程度？",
+      "blocks": "终局回收节奏与旧同事牵连范围",
+      "owner": "作者"
+    },
+    {
+      "question": "夏昭是否会在更早的卷就把认责书记录摊牌？",
+      "blocks": "关系线何时从隐藏不对称进入正面冲突",
+      "owner": "作者"
+    }
+  ]
+}

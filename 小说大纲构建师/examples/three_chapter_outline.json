@@ -1,0 +1,124 @@
+{
+  "contract_version": "1.3",
+  "outline_scope": "full",
+  "source_revision": "demo-v1",
+  "source_package_revision": "demo-v1",
+  "source_trace": {"preserved": ["用户给出的失踪案 premise"], "inferred": ["新增推导：港口账册成为第一条证据"]},
+  "input_package": {"manifest_path": "设定包/manifest.json", "source_revision": "demo-v1", "contract_version": "1.0"},
+  "setting_refs": {"character_ids": ["char-yan"], "location_ids": ["loc-harbor"], "faction_ids": ["fac-council"], "rule_ids": ["rule-tide"], "resource_ids": ["res-ledger"]},
+  "genre_profile": {
+    "primary": "mystery",
+    "secondary": [],
+    "reader_promise": "每次查证都获得一条可验证证据，同时付出关系或安全代价。",
+    "progression_axes": ["证据链", "嫌疑模型", "风险等级"],
+    "must_deliver": ["可回溯线索", "证据改变选择", "公开真相的代价"],
+    "avoid_moves": ["为保谜底隐藏本应知道的事实", "用巧合替代调查因果"]
+  },
+  "story_threads": [{
+    "id": "TH-001",
+    "line_id": "L-001",
+    "summary": "确认封港记录被系统性篡改并追到委员会档案库",
+    "opened_chapter": "CH-0001",
+    "planned_resolution_chapter": "CH-0003",
+    "actual_resolution_chapter": "CH-0003",
+    "status": "CLOSED"
+  }],
+  "direction_gate": {
+    "premise": "港口验潮员发现自己的失踪妹妹被登记为已归港，必须在下一次封潮前查清是谁改了记录。",
+    "reader_promise": "每次查证都获得一条可验证证据，同时付出关系或安全代价。",
+    "pitch": "一个只相信潮汐记录的验潮员，用伪造的港口账册反追操纵全城航线的人。",
+    "opening_delivery": {"first_500": "验潮钟提前响起，主角在封港名单上看到妹妹的名字。", "first_3_chapters": ["发现矛盾", "拿到账册", "被迫选择公开证据"]},
+    "assumptions": ["editorial_assumption：前三章以证据推进为主"]
+  },
+  "story_engine": {
+    "theme_question": "追真相是否值得牺牲仍在身边的人？",
+    "protagonist": {"goal": "找到妹妹", "misbelief": "只要记录完整就不会失去任何人", "behavior": "压力下反复核对时间刻度"},
+    "opponent": {"goal": "让封港记录失去公信力", "plan": "篡改潮汐账册并借委员会追责验潮员", "escalation": "从伪造记录升级到扣押证人"},
+    "ending_proof": {"resolution_id": "RES-01", "claim": "主角公开未经修饰的记录，接受妹妹可能恨自己的代价。", "choice": "公开证据而非私下交换"},
+    "escalation_ladder": [
+      {"trigger": "封港名单出现妹妹名字", "choice": "私查原始记录", "cost": "违反值班规程", "state_change": "主角失去官方调查权限", "axis_refs": ["风险等级"]},
+      {"trigger": "原始账册缺页", "choice": "向竞争船队借副本", "cost": "欠下无法撤销的人情", "state_change": "证据链指向委员会", "axis_refs": ["证据链"]},
+      {"trigger": "证人被委员会扣押", "choice": "公开半成证据换取释放", "cost": "妹妹身份暴露", "state_change": "全城知道记录被操纵", "axis_refs": ["嫌疑模型", "风险等级"]}
+    ]
+  },
+  "narrative_lines": [{"id": "L-001", "name": "失踪案主线", "type": "main", "purpose": "沿证据链逼近记录操纵者"}],
+  "volumes": [{
+    "id": "V-01", "chapter_start": 1, "chapter_end": 3,
+    "promise": "读者看到一条证据如何改变主角的安全边界",
+    "goal": "确认封港记录被人为改写",
+    "opposition": "委员会控制原始档案并追责验潮员",
+    "choice": "公开半成证据保护证人",
+    "cost": "妹妹身份暴露且主角失去职位",
+    "state_change": "调查从私查变成全城公开冲突",
+    "resolution_id": "RES-01",
+    "anchors": {"quarter": "AN-V01-Q1", "midpoint": "AN-V01-MID", "three_quarter": "AN-V01-Q3", "ending": "AN-V01-END"}
+  }],
+  "chapters": [
+    {
+      "id": "CH-0001", "volume_id": "V-01", "number": 1, "purpose": "建立记录矛盾并迫使主角越权",
+      "reader_emotion": "不安中获得第一处确定矛盾", "emotion_source": "editorial_assumption", "rhythm_function": "开局加压",
+      "narrative_line_ids": ["L-001"], "line_weights": {"L-001": 1.0}, "line_intersection": {"is_intersection": false, "line_ids": [], "reason": ""},
+      "anchor_tags": ["AN-V01-Q1"],
+      "axis_advance": [
+        {"axis": "证据链", "change": "潮汐底稿页角的蓝蜡印成为第一条物证，失踪案转入记录篡改调查", "cost_paid": "留下越权痕迹，失去官方调档权限", "evidence": "CH-0001#foreshadowing_ops[0].summary"},
+        {"axis": "风险等级", "change": "主角从合规值班员变成留下越权记录的嫌疑人", "cost_paid": "值班长开始向上级通报主角动向"}
+      ],
+      "gocs": [{"goal": "核对封港名单", "obstacle": "值班长拒绝调档", "choice": "撬开副柜取出潮汐底稿", "state_change": "主角留下越权痕迹"}],
+      "scene_effects": [{"scene_id": "V01-C01-S01", "reader_reaction": "心跳加快", "reader_question": "妹妹为何被登记为已归港"}],
+      "foreshadowing_ops": [{"id": "FS-001", "action": "plant", "summary": "账册页角有不属于港务处的蓝蜡"}],
+      "state_delta": {"entry_state": ["主角仍拥有验潮员职位", "妹妹被登记为已归港"], "trigger": "封港名单出现妹妹名字", "choice": "撬开副柜取出潮汐底稿", "cost": "留下越权痕迹", "changed_state": ["主角失去官方调档权限"], "new_obligations": ["查明蓝蜡来源"], "unresolved_pull": "蓝蜡来自谁的私库"},
+      "thread_ops": [{"id": "TH-001", "action": "open", "effect": "把失踪案转为记录篡改调查"}],
+      "evidence_refs": ["setting:rule-tide"], "continue_reason": "蓝蜡把失踪案指向委员会内部"
+    },
+    {
+      "id": "CH-0002", "volume_id": "V-01", "number": 2, "purpose": "取得第二份记录并确认有人系统性篡改",
+      "reader_emotion": "怀疑被证据逐步坐实", "emotion_source": "editorial_assumption", "rhythm_function": "中点揭示",
+      "narrative_line_ids": ["L-001"], "line_weights": {"L-001": 1.0}, "line_intersection": {"is_intersection": false, "line_ids": [], "reason": ""},
+      "anchor_tags": ["AN-V01-MID"],
+      "axis_advance": [
+        {"axis": "证据链", "change": "船队副本出现同款蓝蜡印且盖印时间早于封港，证明篡改是预谋而非事后补救", "cost_paid": "欠下船队无法撤销的人情", "evidence": "CH-0002#foreshadowing_ops[0].summary"},
+        {"axis": "嫌疑模型", "change": "嫌疑从「船队伪造记录」收窄到「港务处内部有预谋改写」", "cost_paid": "用妹妹的失踪记录交换副本，把私事摆上桌面"}
+      ],
+      "gocs": [{"goal": "拿到船队副本", "obstacle": "船长要求主角承认越权", "choice": "用妹妹的失踪记录交换副本", "state_change": "船队成为临时盟友"}],
+      "scene_effects": [{"scene_id": "V01-C02-S01", "reader_reaction": "确认感", "reader_question": "委员会为何要改写潮汐"}],
+      "foreshadowing_ops": [{"id": "FS-001", "action": "advance", "summary": "副本同样出现蓝蜡印，但盖印时间早于封港"}],
+      "state_delta": {"entry_state": ["主角失去官方调档权限", "蓝蜡印成为待查物证"], "trigger": "船队副本出现同款蓝蜡印", "choice": "用妹妹的失踪记录交换副本", "cost": "欠下船队人情", "changed_state": ["证据链指向委员会"], "new_obligations": ["找到被带走的证人"], "unresolved_pull": "证人被谁先一步带走"}, "thread_ops": [{"id": "TH-001", "action": "advance", "effect": "第二份记录确认篡改具有系统性"}], "continue_reason": "副本上的提前盖印证明篡改来自内部"
+    },
+    {
+      "id": "CH-0003", "volume_id": "V-01", "number": 3, "purpose": "在证人和公信力之间做不可逆选择",
+      "reader_emotion": "紧张后获得带代价的决断", "emotion_source": "editorial_assumption", "rhythm_function": "卷末公开冲突",
+      "narrative_line_ids": ["L-001"], "line_weights": {"L-001": 1.0}, "line_intersection": {"is_intersection": false, "line_ids": [], "reason": ""},
+      "anchor_tags": ["AN-V01-Q3", "AN-V01-END"],
+      "axis_advance": [
+        {"axis": "嫌疑模型", "change": "蓝蜡对应委员会档案库，篡改源头确认指向委员会", "cost_paid": "妹妹身份暴露且主角失去职位", "evidence": "CH-0003#foreshadowing_ops[0].summary"},
+        {"axis": "风险等级", "change": "调查从私查升级为全城公开冲突，委员会开始直接威胁主角家人", "cost_paid": "公开半成证据使主角失去最后的退路"}
+      ],
+      "gocs": [{"goal": "救出证人并保住证据", "obstacle": "委员会以妹妹安全威胁主角", "choice": "公开半成证据换取证人释放", "state_change": "调查变成全城公开冲突"}],
+      "scene_effects": [{"scene_id": "V01-C03-S01", "reader_reaction": "屏息后刺痛", "reader_question": "妹妹会把主角视为救她的人还是毁她的人"}],
+      "foreshadowing_ops": [{"id": "FS-001", "action": "reap", "summary": "蓝蜡对应委员会档案库，证明改写源头"}],
+      "state_delta": {"entry_state": ["找到被带走的证人", "证人被委员会扣押", "证据链指向委员会"], "trigger": "委员会以妹妹安全威胁主角", "choice": "公开半成证据换取证人释放", "cost": "妹妹身份暴露且主角失去职位", "changed_state": ["主角公开证据并失去职位"], "new_obligations": ["面对妹妹对公开行为的反应"], "unresolved_pull": "妹妹将在公开舆论中现身"}, "thread_ops": [{"id": "TH-001", "action": "close", "effect": "蓝蜡对应委员会档案库，证明篡改源头"}], "evidence_refs": ["setting:faction-fac-council"], "continue_reason": "公开证据后的亲情代价迫使主角进入下一卷"
+    }
+  ],
+  "foreshadowing": [{"id": "FS-001", "summary": "账册页角的蓝蜡印揭示篡改来源", "type": "物证", "importance": "P0", "plant_chapter": "CH-0001", "planned_harvest": "CH-0003", "actual_harvest": "CH-0003", "harvest_effect": "主角选择公开证据而非私下交换", "status": "REAP"}],
+  "entity_ledger": {
+    "entities": [
+      {
+        "id": "ENT-001", "name": "蓝蜡", "type": "item",
+        "critical_facts": [
+          {"chapter": 1, "fact": "潮汐底稿页角出现不属于港务处的蓝蜡印", "status": "active", "evidence": "CH-0001 foreshadowing_ops FS-001 plant"},
+          {"chapter": 2, "fact": "船队副本同款蓝蜡印，盖印时间早于封港", "status": "active"},
+          {"chapter": 3, "fact": "蓝蜡对应委员会档案库，篡改源头确认", "status": "changed"}
+        ]
+      },
+      {
+        "id": "ENT-002", "name": "被扣押的证人", "type": "character",
+        "critical_facts": [
+          {"chapter": 2, "fact": "证人先一步被带走，下落不明", "status": "lost"},
+          {"chapter": 3, "fact": "证人被委员会扣押，后因主角公开证据获释", "status": "active"}
+        ]
+      }
+    ]
+  },
+  "branch_nodes": [{"id": "BN-01-01", "chapter_id": "CH-0003", "type": "crisis", "decision": "是否公开半成证据", "selected": {"beats": ["释放证人", "暴露妹妹身份", "失去职位"], "short_term": "证人获释", "mid_term": "委员会反击", "long_term": "全城记录重建", "risks": ["妹妹拒绝合作"]}, "alternatives": [{"name": "私下交换", "consequence": "证据链断裂，妹妹暂时安全"}], "selection_reason": "主题要求主角放弃只靠完整记录自保的误判"}],
+  "open_decisions": []
+}

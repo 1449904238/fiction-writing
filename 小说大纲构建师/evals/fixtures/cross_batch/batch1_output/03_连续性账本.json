@@ -1,0 +1,155 @@
+{
+  "ledger_version": "1.1",
+  "contract_version": "1.3",
+  "source_revision": "dangan-yujin-v1",
+  "outline_scope": "batch",
+  "last_chapter_number": 3,
+  "open_threads": [
+    "TH-001"
+  ],
+  "foreshadowing_snapshot": {
+    "FS-001": "ADVANCE",
+    "FS-002": "ADVANCE"
+  },
+  "entity_terminal": [],
+  "chapters": [
+    {
+      "chapter_id": "CH-0001",
+      "chapter": 1,
+      "volume_id": "V-01",
+      "entry_state": [
+        "沈砚被行业封杀",
+        "手握12份客户底档",
+        "恒信在竞标"
+      ],
+      "trigger": "封杀会当面宣布永不录用",
+      "choice": "当众抽出一页验收漏洞记录",
+      "cost": "烧掉一份信任筹码，恒信法务开始盯人",
+      "changed_state": [
+        "沈砚赢回一分钟谈判席位",
+        "恒信竞标当场作废"
+      ],
+      "new_obligations": [
+        "应付恒信法务取证",
+        "查明是哪份档案的旧账最先反噬"
+      ],
+      "continuity_break": false,
+      "continuity_note": "",
+      "unresolved_pull": "新公司会在什么条件下给沈砚准入",
+      "thread_events": [
+        {
+          "thread_id": "TH-001",
+          "chapter_id": "CH-0001",
+          "chapter": 1,
+          "action": "open",
+          "effect": "信誉重建线以“档案换准入”单元开启"
+        }
+      ],
+      "active_threads_after": [
+        "TH-001"
+      ]
+    },
+    {
+      "chapter_id": "CH-0002",
+      "chapter": 2,
+      "volume_id": "V-01",
+      "entry_state": [
+        "沈砚赢回一分钟谈判席位",
+        "应付恒信法务取证",
+        "手握11份档案可拆用"
+      ],
+      "trigger": "新公司要求交出全部底档作为合作前提",
+      "choice": "拒绝全交，给出零底牌承诺",
+      "cost": "只能接边缘项目，且恒信诉讼立案",
+      "changed_state": [
+        "沈砚获得一个自担风险的项目准入"
+      ],
+      "new_obligations": [
+        "短期内交付边缘项目自证信誉",
+        "应对诉讼立案"
+      ],
+      "continuity_break": false,
+      "continuity_note": "",
+      "unresolved_pull": "夏昭会在什么时候把认责书记录摊到桌面上",
+      "thread_events": [
+        {
+          "thread_id": "TH-001",
+          "chapter_id": "CH-0002",
+          "chapter": 2,
+          "action": "advance",
+          "effect": "准入机制切换为“信誉赌注”而非“档案碾压”"
+        }
+      ],
+      "active_threads_after": [
+        "TH-001"
+      ]
+    },
+    {
+      "chapter_id": "CH-0003",
+      "chapter": 3,
+      "volume_id": "V-01",
+      "entry_state": [
+        "沈砚获得一个自担风险的项目准入",
+        "应对诉讼立案",
+        "夏昭尚未公开证词"
+      ],
+      "trigger": "交付节点恒信发起诉讼并刷负面记录",
+      "choice": "不用新档案，靠书面验收流程零底牌完成交付",
+      "cost": "信誉只够维持一个合作，档案代价上限仍未明确",
+      "changed_state": [
+        "沈砚重新获得一家合作方"
+      ],
+      "new_obligations": [
+        "处理诉讼对家人担保债务的牵连",
+        "面对档案旧账波及旧同事的后果"
+      ],
+      "continuity_break": false,
+      "continuity_note": "",
+      "unresolved_pull": "夏昭会不会为了自保而交出认责书记录",
+      "thread_events": [
+        {
+          "thread_id": "TH-001",
+          "chapter_id": "CH-0003",
+          "chapter": 3,
+          "action": "advance",
+          "effect": "信誉重建从无人敢用推进到有一家合作，同时积压诉讼风险"
+        }
+      ],
+      "active_threads_after": [
+        "TH-001"
+      ]
+    }
+  ],
+  "story_threads": [
+    {
+      "definition": {
+        "id": "TH-001",
+        "line_id": "L-001",
+        "summary": "沈砚以档案残片为筹码，逐个换回市场准入并追查恒信封杀机制",
+        "opened_chapter": "CH-0001",
+        "planned_resolution_chapter": null,
+        "status": "OPEN"
+      },
+      "history": [
+        {
+          "chapter_id": "CH-0001",
+          "chapter": 1,
+          "action": "open",
+          "effect": "信誉重建线以“档案换准入”单元开启"
+        },
+        {
+          "chapter_id": "CH-0002",
+          "chapter": 2,
+          "action": "advance",
+          "effect": "准入机制切换为“信誉赌注”而非“档案碾压”"
+        },
+        {
+          "chapter_id": "CH-0003",
+          "chapter": 3,
+          "action": "advance",
+          "effect": "信誉重建从无人敢用推进到有一家合作，同时积压诉讼风险"
+        }
+      ]
+    }
+  ]
+}

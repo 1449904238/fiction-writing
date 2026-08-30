@@ -1,0 +1,34 @@
+{
+  "cases": 2,
+  "e2e_passed": 2,
+  "e2e_pass_rate": 1.0,
+  "results": [
+    {
+      "case": "examples\\standalone_batch_danganyujin.json",
+      "R_schema": true,
+      "R_semantic": true,
+      "R_input": "unmeasured",
+      "R_quality": "unmeasured",
+      "R_total": "unmeasured",
+      "validator_output": "VALID OUTLINE",
+      "R_handoff": true,
+      "projector_output": "PROJECTED 3 chapters\nC:\\Users\\14499\\AppData\\Local\\Temp\\outline-eval-nfnx8kc4\\handoff.json\nC:\\Users\\14499\\AppData\\Local\\Temp\\outline-eval-nfnx8kc4\\handoff.md",
+      "R_gate": true,
+      "finalizer_output": "FINALIZE PASSED\nreceipt: C:\\Users\\14499\\AppData\\Local\\Temp\\outline-eval-nfnx8kc4\\finalized\\03_审计回执.json\nhandoff: C:\\Users\\14499\\AppData\\Local\\Temp\\outline-eval-nfnx8kc4\\finalized\\02_细纲交接.json\nledger: C:\\Users\\14499\\AppData\\Local\\Temp\\outline-eval-nfnx8kc4\\finalized\\03_连续性账本.json"
+    },
+    {
+      "case": "examples\\three_chapter_outline.json",
+      "R_schema": true,
+      "R_semantic": true,
+      "R_input": "unmeasured",
+      "R_quality": "unmeasured",
+      "R_total": "unmeasured",
+      "validator_output": "VALID OUTLINE",
+      "R_handoff": true,
+      "projector_output": "PROJECTED 3 chapters\nC:\\Users\\14499\\AppData\\Local\\Temp\\outline-eval-a9jt4i5k\\handoff.json\nC:\\Users\\14499\\AppData\\Local\\Temp\\outline-eval-a9jt4i5k\\handoff.md",
+      "R_gate": true,
+      "finalizer_output": "FINALIZE PASSED\nreceipt: C:\\Users\\14499\\AppData\\Local\\Temp\\outline-eval-a9jt4i5k\\finalized\\03_审计回执.json\nhandoff: C:\\Users\\14499\\AppData\\Local\\Temp\\outline-eval-a9jt4i5k\\finalized\\02_细纲交接.json\nledger: C:\\Users\\14499\\AppData\\Local\\Temp\\outline-eval-a9jt4i5k\\finalized\\03_连续性账本.json"
+    }
+  ],
+  "note": "E2E pass rate is deterministic gate compliance. R_input/R_quality require independent review; R_total remains unmeasured until supplied."
+}

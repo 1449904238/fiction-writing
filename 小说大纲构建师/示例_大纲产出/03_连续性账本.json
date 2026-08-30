@@ -1,0 +1,185 @@
+{
+  "ledger_version": "1.1",
+  "contract_version": "1.3",
+  "source_revision": "wugang-dangan-v1",
+  "outline_scope": "batch",
+  "last_chapter_number": 3,
+  "open_threads": [
+    "TH-001",
+    "TH-002"
+  ],
+  "foreshadowing_snapshot": {
+    "FS-001": "ADVANCE",
+    "FS-002": "ADVANCE",
+    "FS-003": "PLANT"
+  },
+  "entity_terminal": [],
+  "chapters": [
+    {
+      "chapter_id": "CH-0001",
+      "chapter": 1,
+      "volume_id": "V-01",
+      "entry_state": [
+        "顾衍是验尸房档案员",
+        "周衡三年前殉职并已火化",
+        "封存记录完整"
+      ],
+      "trigger": "冷藏柜多出标着“失踪”的尸体、正是周衡",
+      "choice": "当众调出三年前封存记录",
+      "cost": "内务开始盯上顾衍",
+      "changed_state": [
+        "顾衍从例行核对转为公开冲突",
+        "内务介入"
+      ],
+      "new_obligations": [
+        "应付内务把尸体当“伪造档案”的指控"
+      ],
+      "continuity_break": false,
+      "continuity_note": "",
+      "unresolved_pull": "内务将如何处置这具“不该存在”的尸体",
+      "thread_events": [
+        {
+          "thread_id": "TH-001",
+          "chapter_id": "CH-0001",
+          "chapter": 1,
+          "action": "open",
+          "effect": "真相核查以“失踪”尸体矛盾开启"
+        },
+        {
+          "thread_id": "TH-002",
+          "chapter_id": "CH-0001",
+          "chapter": 1,
+          "action": "open",
+          "effect": "林霜的报道身份在封存记录矛盾中触及关系线"
+        }
+      ],
+      "active_threads_after": [
+        "TH-001",
+        "TH-002"
+      ]
+    },
+    {
+      "chapter_id": "CH-0002",
+      "chapter": 2,
+      "volume_id": "V-01",
+      "entry_state": [
+        "顾衍从例行核对转为公开冲突",
+        "内务开始盯上顾衍",
+        "顾衍未交钥匙"
+      ],
+      "trigger": "内务与船务公司要求交钥匙或承认伪造",
+      "choice": "拒绝交出档案室钥匙",
+      "cost": "顾衍被孤立，船务公司认定尸体为伪造",
+      "changed_state": [
+        "顾衍守住档案室但被孤立",
+        "船务公司成为对立面"
+      ],
+      "new_obligations": [
+        "找一条不靠钥匙的复核路径"
+      ],
+      "continuity_break": false,
+      "continuity_note": "",
+      "unresolved_pull": "拒绝交钥匙后顾衍还有没有别的出路",
+      "thread_events": [
+        {
+          "thread_id": "TH-001",
+          "chapter_id": "CH-0002",
+          "chapter": 2,
+          "action": "advance",
+          "effect": "守住钥匙的同时引入船务公司对立面"
+        }
+      ],
+      "active_threads_after": [
+        "TH-001",
+        "TH-002"
+      ]
+    },
+    {
+      "chapter_id": "CH-0003",
+      "chapter": 3,
+      "volume_id": "V-01",
+      "entry_state": [
+        "顾衍守住档案室但被孤立",
+        "船务公司认定尸体为伪造",
+        "林霜掌握船只记录矛盾"
+      ],
+      "trigger": "内务立案与商会施压同时到来",
+      "choice": "用一份潮汐记录换尸检复核资格",
+      "cost": "内务立案，复核在立案压力下推进",
+      "changed_state": [
+        "顾衍从被调查者变为复核人",
+        "立案缠身"
+      ],
+      "new_obligations": [
+        "在立案期限内完成复核",
+        "应对“监守自盗”舆论"
+      ],
+      "continuity_break": false,
+      "continuity_note": "",
+      "unresolved_pull": "立案下尸检复核能否按期完成，以及林霜何时交出监控截图",
+      "thread_events": [
+        {
+          "thread_id": "TH-001",
+          "chapter_id": "CH-0003",
+          "chapter": 3,
+          "action": "advance",
+          "effect": "真相核查从换复核推进到复核合法化"
+        }
+      ],
+      "active_threads_after": [
+        "TH-001",
+        "TH-002"
+      ]
+    }
+  ],
+  "story_threads": [
+    {
+      "definition": {
+        "id": "TH-001",
+        "line_id": "L-001",
+        "summary": "顾衍用可验证物证逐个推进核查，追查周衡“殉职”被伪造成灭口的真相",
+        "opened_chapter": "CH-0001",
+        "planned_resolution_chapter": null,
+        "status": "OPEN"
+      },
+      "history": [
+        {
+          "chapter_id": "CH-0001",
+          "chapter": 1,
+          "action": "open",
+          "effect": "真相核查以“失踪”尸体矛盾开启"
+        },
+        {
+          "chapter_id": "CH-0002",
+          "chapter": 2,
+          "action": "advance",
+          "effect": "守住钥匙的同时引入船务公司对立面"
+        },
+        {
+          "chapter_id": "CH-0003",
+          "chapter": 3,
+          "action": "advance",
+          "effect": "真相核查从换复核推进到复核合法化"
+        }
+      ]
+    },
+    {
+      "definition": {
+        "id": "TH-002",
+        "line_id": "L-002",
+        "summary": "顾衍与林霜从信息不对称到共同担责，由公开承认缺页解锁监控截图",
+        "opened_chapter": "CH-0001",
+        "planned_resolution_chapter": null,
+        "status": "OPEN"
+      },
+      "history": [
+        {
+          "chapter_id": "CH-0001",
+          "chapter": 1,
+          "action": "open",
+          "effect": "林霜的报道身份在封存记录矛盾中触及关系线"
+        }
+      ]
+    }
+  ]
+}

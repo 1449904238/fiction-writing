@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fiction-writing/schemas/refinement-intent.schema.json",
+  "title": "精修意图包 (Refinement Intent Package)",
+  "description": "精修意图包 JSON Schema 定义文件。深度通道 Phase A（质感深化）完成后生成此结构化数据，供 Phase B（净化+Gate检测）与 Phase D（收尾）读取：记录技法层的打磨决策，使 Gate 层能精准跳过已处理项、豁免保留项、聚焦残留风险，避免全量重扫。对应 SKILL.md 深度通道 Phase A→B 意图包传递与 Gate 3/Gate 11 的意图包读取逻辑（原04→05跨skill交接协议已随合并内化）。",
+  "type": "object",
+  "required": ["chapter_no", "processed_items"],
+  "properties": {
+    "chapter_no": { "type": "integer" },
+    "processed_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "status", "gate_id"],
+        "properties": {
+          "category": { "enum": ["psychological_direct", "explanation_tone", "metaphor_quality", "sensory_redirect", "dialogue_subtext"] },
+          "status": { "enum": ["fully_processed", "partially_processed", "skipped"] },
+          "gate_id": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "boundary_ambiguous_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["location", "description", "gate_id"],
+        "properties": {
+          "location": { "type": "string" },
+          "description": { "type": "string" },
+          "gate_id": { "type": "string" }
+        }
+      }
+    }
+  }
+}

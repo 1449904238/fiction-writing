@@ -1,0 +1,394 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "novel-outline-builder/outline.schema.json",
+  "title": "Canonical novel outline",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "contract_version",
+    "outline_scope",
+    "source_revision",
+    "source_trace",
+    "setting_refs",
+    "genre_profile",
+    "story_threads",
+    "direction_gate",
+    "story_engine",
+    "narrative_lines",
+    "volumes",
+    "chapters",
+    "foreshadowing",
+    "branch_nodes",
+    "open_decisions"
+  ],
+  "properties": {
+    "contract_version": { "description": "1.2 = 现行基础契约；1.3 = 启用题材契约/实体账本/商业层断言（references/genre_contracts.json）。旧 1.2 大纲仍按 1.2 路径校验，互不破坏。", "enum": ["1.2", "1.3"] },
+    "outline_scope": { "enum": ["batch", "full"] },
+    "outline_profile": {
+      "description": "1.3 可选：lite（短篇/单元剧，放宽 story_threads/thread_ops/volumes 记账，仅允许 outline_scope=batch 且必须配 profile_intent）/ standard / full。缺省时按 outline_scope 推断（full→full，batch→standard）。gocs/scene_effects/axis_advance 三项任何档位都不放宽。",
+      "enum": ["lite", "standard", "full"]
+    },
+    "profile_intent": { "description": "声明 outline_profile=lite 时的短篇意图说明，必填。", "type": "string", "minLength": 1 },
+    "chapter_offset": {
+      "description": "续批偏移量：本批第一章对应的全书绝对章号 - 1。缺省 0（首批或独立成篇）。本批内章节号仍需从 offset+1 连续递增。跨批核验（finalize --previous）要求本批 offset 等于上一批结束章号。",
+      "type": "integer",
+      "minimum": 0
+    },
+    "inherited": {
+      "description": "续批承接声明：从上一批延续的线程与伏笔 ID。承接线程的 opened_chapter / 承接伏笔的 plant_chapter 允许指向本批之外的章节（历史事实），本批内不得重复 open/plant。合法性由 finalize --previous 跨批核验兜底（承接对象必须真实存在于上一批且状态兼容）。",
+      "type": "object",
+      "properties": {
+        "threads": { "type": "array", "items": { "type": "string", "pattern": "^TH-[0-9]{3}$" } },
+        "foreshadowing": { "type": "array", "items": { "type": "string", "pattern": "^FS-[0-9]{3}$" } }
+      }
+    },
+    "source_revision": { "type": "string", "minLength": 1 },
+    "source_package_revision": { "description": "可选：仅当输入是设定包时填写，需与 input_package.source_revision 一致；独立设定文档输入省略。", "type": "string", "minLength": 1 },
+    "source_trace": {
+      "type": "object",
+      "required": ["preserved", "inferred"],
+      "properties": {
+        "preserved": { "type": "array", "items": { "type": "string" } },
+        "inferred": { "type": "array", "items": { "type": "string" } },
+        "document": { "description": "来源设定文档路径或标题，例如 示例_完整设定包", "type": "string" }
+      }
+    },
+    "input_package": {
+      "description": "可选：仅在输入是 设定包/（manifest.json + 01 + 02）时填写，用于追溯上游版本。",
+      "type": "object",
+      "required": ["source_revision", "contract_version"],
+      "properties": {
+        "manifest_path": { "type": "string" },
+        "source_revision": { "type": "string", "minLength": 1 },
+        "contract_version": { "type": "string", "minLength": 1 },
+        "files": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "setting_refs": {
+      "description": "可选追溯：使用设定包时填严格 ID；独立设定文档输入没有稳定 ID 时保留空数组，并把设定锚点记在 source_trace.preserved。",
+      "type": "object",
+      "properties": {
+        "character_ids": { "type": "array", "items": { "type": "string" } },
+        "location_ids": { "type": "array", "items": { "type": "string" } },
+        "faction_ids": { "type": "array", "items": { "type": "string" } },
+        "rule_ids": { "type": "array", "items": { "type": "string" } },
+        "resource_ids": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "genre_profile": { "$ref": "#/$defs/genreProfile" },
+    "story_threads": { "type": "array", "items": { "$ref": "#/$defs/storyThread" } },
+    "direction_gate": { "$ref": "#/$defs/directionGate" },
+    "story_engine": { "$ref": "#/$defs/storyEngine" },
+    "entity_ledger": {
+      "description": "1.3 可选：实体状态账本。死亡/销毁实体在后续章参与 gocs.choice 或 changed_state（且非 flashback）会被机检拒绝；数值先减后增触发告警。",
+      "type": "object",
+      "required": ["entities"],
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "type", "critical_facts"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^ENT-[0-9]{3}$" },
+              "name": { "$ref": "#/$defs/nonEmpty" },
+              "type": { "enum": ["character", "item", "location", "faction", "concept"] },
+              "critical_facts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["chapter", "fact", "status"],
+                  "properties": {
+                    "chapter": { "type": "integer", "minimum": 1 },
+                    "fact": { "$ref": "#/$defs/nonEmpty" },
+                    "status": { "enum": ["active", "dead", "destroyed", "lost", "changed"] },
+                    "evidence": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "internal_anchors": {
+      "description": "1.3 可选：独立模式（无上游设定包）自建的锚点，结构与上游设定包同构。escalation_ladder 引用能力轴（能力边界/对手强度）时 power_system 必填。",
+      "type": "object",
+      "properties": {
+        "origin": { "enum": ["internal", "upstream"] },
+        "power_system": {
+          "type": "object",
+          "required": ["levels"],
+          "properties": {
+            "levels": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["tier", "ceiling", "boundary"],
+                "properties": {
+                  "tier": { "$ref": "#/$defs/nonEmpty" },
+                  "ceiling": { "$ref": "#/$defs/nonEmpty" },
+                  "boundary": { "$ref": "#/$defs/nonEmpty" },
+                  "overtake_condition": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "number_anchors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "entity", "value"],
+            "properties": {
+              "kind": { "$ref": "#/$defs/nonEmpty" },
+              "entity": { "$ref": "#/$defs/nonEmpty" },
+              "value": { "$ref": "#/$defs/nonEmpty" },
+              "locked_at": { "type": "string", "pattern": "^CH-[0-9]{4}$" }
+            }
+          }
+        }
+      }
+    },
+    "commercial_profile": {
+      "description": "1.3 可选：商业层。evidence_source 必须是真实存在的对标节奏包文件路径（机检存在性，杜绝虚构来源）；无数据时必须显式 assumption_flag=editorial_assumption 且商业断言静默。hook 断言仅在导入数据后启用。",
+      "type": "object",
+      "properties": {
+        "platform": { "type": "string" },
+        "evidence_source": { "type": "string", "minLength": 1 },
+        "hook_policy": {
+          "type": "object",
+          "properties": { "first_3_chapters": { "enum": ["all_high_pull"] } }
+        },
+        "high_energy_gap_max": { "type": "integer", "minimum": 1 },
+        "assumption_flag": { "enum": ["editorial_assumption", "benchmarked"] }
+      }
+    },
+    "narrative_lines": { "type": "array", "items": { "$ref": "#/$defs/narrativeLine" } },
+    "volumes": { "type": "array", "items": { "$ref": "#/$defs/volume" }, "minItems": 1 },
+    "chapters": { "type": "array", "items": { "$ref": "#/$defs/chapter" }, "minItems": 1 },
+    "foreshadowing": { "type": "array", "items": { "$ref": "#/$defs/foreshadowing" } },
+    "branch_nodes": { "type": "array", "items": { "$ref": "#/$defs/branch" } },
+    "open_decisions": { "type": "array", "items": { "$ref": "#/$defs/openDecision" } }
+  },
+  "$defs": {
+    "nonEmpty": { "type": "string", "minLength": 1 },
+    "genreProfile": {
+      "type": "object",
+      "required": ["primary", "secondary", "reader_promise", "progression_axes", "must_deliver", "avoid_moves"],
+      "properties": {
+        "primary": { "enum": ["mystery", "romance", "progression", "workplace", "historical", "urban", "science_fiction", "fantasy", "literary", "mixed"] },
+        "secondary": { "type": "array", "items": { "type": "string" } },
+        "reader_promise": { "$ref": "#/$defs/nonEmpty" },
+        "progression_axes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmpty" } },
+        "must_deliver": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmpty" } },
+        "avoid_moves": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmpty" } }
+      }
+    },
+    "storyThread": {
+      "type": "object",
+      "required": ["id", "line_id", "summary", "opened_chapter", "planned_resolution_chapter", "status"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^TH-[0-9]{3}$" },
+        "line_id": { "type": "string", "pattern": "^L-[0-9]{3}$" },
+        "summary": { "$ref": "#/$defs/nonEmpty" },
+        "opened_chapter": { "type": "string", "pattern": "^CH-[0-9]{4}$" },
+        "planned_resolution_chapter": { "type": ["string", "null"], "pattern": "^CH-[0-9]{4}$" },
+        "actual_resolution_chapter": { "type": ["string", "null"], "pattern": "^CH-[0-9]{4}$" },
+        "status": { "enum": ["OPEN", "CLOSED", "ABANDONED"] }
+      }
+    },
+    "directionGate": {
+      "type": "object",
+      "required": ["premise", "reader_promise", "pitch", "opening_delivery", "assumptions"],
+      "properties": {
+        "premise": { "$ref": "#/$defs/nonEmpty" },
+        "reader_promise": { "$ref": "#/$defs/nonEmpty" },
+        "pitch": { "$ref": "#/$defs/nonEmpty" },
+        "opening_delivery": {
+          "type": "object",
+          "required": ["first_500", "first_3_chapters"],
+          "properties": {
+            "first_500": { "$ref": "#/$defs/nonEmpty" },
+            "first_3_chapters": { "type": "array", "minItems": 1 }
+          }
+        },
+        "assumptions": { "type": "array" }
+      }
+    },
+    "storyEngine": {
+      "type": "object",
+      "required": ["theme_question", "protagonist", "opponent", "ending_proof", "escalation_ladder"],
+      "properties": {
+        "theme_question": { "$ref": "#/$defs/nonEmpty" },
+        "protagonist": { "type": "object" },
+        "opponent": { "type": "object" },
+        "ending_proof": {
+          "type": "object",
+          "required": ["resolution_id", "claim"],
+          "properties": {
+            "resolution_id": { "type": "string", "pattern": "^RES-[0-9A-Z-]+$" },
+            "claim": { "$ref": "#/$defs/nonEmpty" },
+            "choice": { "type": "string" }
+          }
+        },
+        "escalation_ladder": { "type": "array", "minItems": 3, "items": { "type": "object" } }
+      }
+    },
+    "narrativeLine": {
+      "type": "object",
+      "required": ["id", "name", "type", "purpose"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^L-[0-9]{3}$" },
+        "name": { "$ref": "#/$defs/nonEmpty" },
+        "type": { "enum": ["main", "subplot", "relationship", "growth"] },
+        "purpose": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "volume": {
+      "type": "object",
+      "required": ["id", "chapter_start", "chapter_end", "promise", "goal", "opposition", "choice", "cost", "state_change", "anchors", "resolution_id"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^V-[0-9]{2}$" },
+        "chapter_start": { "type": "integer", "minimum": 1 },
+        "chapter_end": { "type": "integer", "minimum": 1 },
+        "promise": { "$ref": "#/$defs/nonEmpty" },
+        "goal": { "$ref": "#/$defs/nonEmpty" },
+        "opposition": { "$ref": "#/$defs/nonEmpty" },
+        "choice": { "$ref": "#/$defs/nonEmpty" },
+        "cost": { "$ref": "#/$defs/nonEmpty" },
+        "state_change": { "$ref": "#/$defs/nonEmpty" },
+        "resolution_id": { "type": "string", "pattern": "^RES-[0-9A-Z-]+$" },
+        "anchors": {
+          "type": "object",
+          "required": ["quarter", "midpoint", "three_quarter", "ending"],
+          "properties": {
+            "quarter": { "type": "string" },
+            "midpoint": { "type": "string" },
+            "three_quarter": { "type": "string" },
+            "ending": { "type": "string", "pattern": "^AN-[0-9A-Z-]+$" }
+          }
+        }
+      }
+    },
+    "chapter": {
+      "type": "object",
+      "required": ["id", "volume_id", "number", "purpose", "reader_emotion", "emotion_source", "rhythm_function", "narrative_line_ids", "anchor_tags", "gocs", "scene_effects", "foreshadowing_ops", "state_delta", "thread_ops", "continue_reason"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^CH-[0-9]{4}$" },
+        "volume_id": { "type": "string", "pattern": "^V-[0-9]{2}$" },
+        "number": { "type": "integer", "minimum": 1 },
+        "purpose": { "$ref": "#/$defs/nonEmpty" },
+        "reader_emotion": { "$ref": "#/$defs/nonEmpty" },
+        "emotion_source": { "enum": ["user", "editorial_assumption"] },
+        "rhythm_function": { "$ref": "#/$defs/nonEmpty" },
+        "narrative_line_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^L-[0-9]{3}$" } },
+        "line_weights": { "type": "object", "additionalProperties": { "type": "number", "minimum": 0 } },
+        "line_intersection": { "type": "object" },
+        "anchor_tags": { "type": "array", "items": { "type": "string" } },
+        "gocs": { "type": "array", "minItems": 1, "items": { "type": "object" } },
+        "scene_effects": { "type": "array", "minItems": 1, "items": { "type": "object" } },
+        "foreshadowing_ops": { "type": "array", "items": { "type": "object" } },
+        "state_delta": { "$ref": "#/$defs/stateDelta" },
+        "thread_ops": { "type": "array", "items": { "$ref": "#/$defs/threadOperation" } },
+        "evidence_refs": { "type": "array", "items": { "type": "string" } },
+        "axis_advance": { "type": "array", "items": { "$ref": "#/$defs/axisAdvance" } },
+        "continue_reason": {
+          "oneOf": [
+            { "$ref": "#/$defs/nonEmpty" },
+            {
+              "description": "1.3 结构化形式：hook_type 封闭枚举（危机/悬念/反转/期待/情感/兑现/代价），text 必填。导入对标节奏包后机检可断言高拉力钩子分布。",
+              "type": "object",
+              "required": ["hook_type", "text"],
+              "properties": {
+                "hook_type": { "enum": ["危机", "悬念", "反转", "期待", "情感", "兑现", "代价"] },
+                "text": { "$ref": "#/$defs/nonEmpty" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "axisAdvance": {
+      "type": "object",
+      "required": ["axis", "change"],
+      "properties": {
+        "axis": { "$ref": "#/$defs/nonEmpty" },
+        "change": { "$ref": "#/$defs/nonEmpty" },
+        "cost_paid": { "description": "该次推进付出的代价；缺省时机检告警「无代价推进嫌疑」并路由语义评审", "type": "string" },
+        "evidence": { "description": "锚点：CH-0002#gocs[0].state_change 形式，引用章节必须存在", "type": "string" }
+      }
+    },
+    "stateDelta": {
+      "type": "object",
+      "required": ["entry_state", "trigger", "choice", "cost", "changed_state", "new_obligations", "unresolved_pull"],
+      "properties": {
+        "entry_state": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmpty" } },
+        "trigger": { "$ref": "#/$defs/nonEmpty" },
+        "choice": { "$ref": "#/$defs/nonEmpty" },
+        "cost": { "$ref": "#/$defs/nonEmpty" },
+        "changed_state": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmpty" } },
+        "new_obligations": { "type": "array", "items": { "$ref": "#/$defs/nonEmpty" } },
+        "continuity_break": { "type": "boolean" },
+        "continuity_note": { "type": "string" },
+        "unresolved_pull": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "threadOperation": {
+      "type": "object",
+      "required": ["id", "action", "effect"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^TH-[0-9]{3}$" },
+        "action": { "enum": ["open", "advance", "close", "abandon"] },
+        "effect": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "foreshadowing": {
+      "type": "object",
+      "required": ["id", "summary", "type", "importance", "plant_chapter", "planned_harvest", "harvest_effect", "status"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^FS-[0-9]{3}$" },
+        "summary": { "$ref": "#/$defs/nonEmpty" },
+        "type": { "$ref": "#/$defs/nonEmpty" },
+        "importance": { "enum": ["P0", "P1", "P2"] },
+        "source_clue": {
+          "description": "可选：消费设定包时，把本伏笔绑定到 01_设定元数据.json 的 genre_module[].data.clue_ledger[].id，保证线索可追溯、可机检（validate --setting-package 对不存在的线索 id 判错）。",
+          "type": "string",
+          "minLength": 1
+        },
+        "plant_chapter": { "type": "string", "pattern": "^CH-[0-9]{4}$" },
+        "planned_harvest": {
+          "oneOf": [
+            { "type": "string", "pattern": "^CH-[0-9]{4}$" },
+            { "type": "null" }
+          ]
+        },
+        "actual_harvest": { "type": ["string", "null"], "pattern": "^CH-[0-9]{4}$" },
+        "harvest_effect": { "$ref": "#/$defs/nonEmpty" },
+        "status": { "enum": ["PLANT", "ADVANCE", "HINT", "REAP", "ARCHIVE"] }
+      }
+    },
+    "branch": {
+      "type": "object",
+      "required": ["id", "chapter_id", "type", "decision", "selected", "alternatives", "selection_reason"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^BN-[0-9]{2}-[0-9]{2}$" },
+        "chapter_id": { "type": "string", "pattern": "^CH-[0-9]{4}$" },
+        "type": { "enum": ["decision", "turning", "crisis"] },
+        "decision": { "$ref": "#/$defs/nonEmpty" },
+        "selected": { "type": "object" },
+        "alternatives": { "type": "array", "maxItems": 2 },
+        "selection_reason": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "openDecision": {
+      "type": "object",
+      "required": ["question", "blocks", "owner"],
+      "properties": {
+        "question": { "$ref": "#/$defs/nonEmpty" },
+        "blocks": { "$ref": "#/$defs/nonEmpty" },
+        "owner": { "$ref": "#/$defs/nonEmpty" }
+      }
+    }
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "ledger_version": "1.1",
+  "contract_version": "1.3",
+  "source_revision": "demo-v1",
+  "outline_scope": "full",
+  "last_chapter_number": 3,
+  "open_threads": [],
+  "foreshadowing_snapshot": {
+    "FS-001": "REAP"
+  },
+  "entity_terminal": [],
+  "chapters": [
+    {
+      "chapter_id": "CH-0001",
+      "chapter": 1,
+      "volume_id": "V-01",
+      "entry_state": [
+        "主角仍拥有验潮员职位",
+        "妹妹被登记为已归港"
+      ],
+      "trigger": "封港名单出现妹妹名字",
+      "choice": "撬开副柜取出潮汐底稿",
+      "cost": "留下越权痕迹",
+      "changed_state": [
+        "主角失去官方调档权限"
+      ],
+      "new_obligations": [
+        "查明蓝蜡来源"
+      ],
+      "continuity_break": false,
+      "continuity_note": "",
+      "unresolved_pull": "蓝蜡来自谁的私库",
+      "thread_events": [
+        {
+          "thread_id": "TH-001",
+          "chapter_id": "CH-0001",
+          "chapter": 1,
+          "action": "open",
+          "effect": "把失踪案转为记录篡改调查"
+        }
+      ],
+      "active_threads_after": [
+        "TH-001"
+      ]
+    },
+    {
+      "chapter_id": "CH-0002",
+      "chapter": 2,
+      "volume_id": "V-01",
+      "entry_state": [
+        "主角失去官方调档权限",
+        "蓝蜡印成为待查物证"
+      ],
+      "trigger": "船队副本出现同款蓝蜡印",
+      "choice": "用妹妹的失踪记录交换副本",
+      "cost": "欠下船队人情",
+      "changed_state": [
+        "证据链指向委员会"
+      ],
+      "new_obligations": [
+        "找到被带走的证人"
+      ],
+      "continuity_break": false,
+      "continuity_note": "",
+      "unresolved_pull": "证人被谁先一步带走",
+      "thread_events": [
+        {
+          "thread_id": "TH-001",
+          "chapter_id": "CH-0002",
+          "chapter": 2,
+          "action": "advance",
+          "effect": "第二份记录确认篡改具有系统性"
+        }
+      ],
+      "active_threads_after": [
+        "TH-001"
+      ]
+    },
+    {
+      "chapter_id": "CH-0003",
+      "chapter": 3,
+      "volume_id": "V-01",
+      "entry_state": [
+        "找到被带走的证人",
+        "证人被委员会扣押",
+        "证据链指向委员会"
+      ],
+      "trigger": "委员会以妹妹安全威胁主角",
+      "choice": "公开半成证据换取证人释放",
+      "cost": "妹妹身份暴露且主角失去职位",
+      "changed_state": [
+        "主角公开证据并失去职位"
+      ],
+      "new_obligations": [
+        "面对妹妹对公开行为的反应"
+      ],
+      "continuity_break": false,
+      "continuity_note": "",
+      "unresolved_pull": "妹妹将在公开舆论中现身",
+      "thread_events": [
+        {
+          "thread_id": "TH-001",
+          "chapter_id": "CH-0003",
+          "chapter": 3,
+          "action": "close",
+          "effect": "蓝蜡对应委员会档案库，证明篡改源头"
+        }
+      ],
+      "active_threads_after": []
+    }
+  ],
+  "story_threads": [
+    {
+      "definition": {
+        "id": "TH-001",
+        "line_id": "L-001",
+        "summary": "确认封港记录被系统性篡改并追到委员会档案库",
+        "opened_chapter": "CH-0001",
+        "planned_resolution_chapter": "CH-0003",
+        "actual_resolution_chapter": "CH-0003",
+        "status": "CLOSED"
+      },
+      "history": [
+        {
+          "chapter_id": "CH-0001",
+          "chapter": 1,
+          "action": "open",
+          "effect": "把失踪案转为记录篡改调查"
+        },
+        {
+          "chapter_id": "CH-0002",
+          "chapter": 2,
+          "action": "advance",
+          "effect": "第二份记录确认篡改具有系统性"
+        },
+        {
+          "chapter_id": "CH-0003",
+          "chapter": 3,
+          "action": "close",
+          "effect": "蓝蜡对应委员会档案库，证明篡改源头"
+        }
+      ]
+    }
+  ]
+}

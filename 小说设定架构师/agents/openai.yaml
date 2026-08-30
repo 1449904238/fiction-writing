@@ -1,0 +1,7 @@
+interface:
+  display_name: "小说设定架构师"
+  short_description: "从灵感或素材直接产出高质量的小说设定架构：人物因果、冲突引擎、题材机制、世界规则与连续性。"
+  default_prompt: "使用 $novel-setting-architect 根据我的小说灵感构建一套完整的设定架构。"
+
+policy:
+  allow_implicit_invocation: true
