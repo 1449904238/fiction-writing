@@ -85,17 +85,18 @@ def _san(fn_raw):
     return re.sub(r'[\\/:*?"<>|“”‘’！？，。；：（）()【】\s]+', "_", fn_raw)
 
 def write_md(c, body, kind, tags, rel_links, out_dir, existing_map=None):
-    fm = ["---", f'id: "{c["id"]}"']
+    import json as _json
+    fm = ["---", f'id: {_json.dumps(c["id"], ensure_ascii=False)}']
     for k in ["name", "type", "section", "author"]:
-        if c.get(k): fm.append(f'{k}: "{c[k]}"')
+        if c.get(k): fm.append(f'{k}: {_json.dumps(c[k], ensure_ascii=False)}')
     if c.get("use_when"):
         fm.append("use_when:")
-        fm += [f'  - "{u}"' for u in c["use_when"]]
+        fm += [f'  - {_json.dumps(u, ensure_ascii=False)}' for u in c["use_when"]]
     fm.append(f'kind: "{kind}"')
     s = c.get("source", {})
-    fm.append(f'book: "{s.get("book","")}"')
-    fm.append(f'chapter: "{s.get("chapter","")}"')
-    fm.append(f'source: "{s.get("raw_file","")}"')
+    fm.append(f'book: {_json.dumps(s.get("book",""), ensure_ascii=False)}')
+    fm.append(f'chapter: {_json.dumps(s.get("chapter",""), ensure_ascii=False)}')
+    fm.append(f'source: {_json.dumps(s.get("raw_file",""), ensure_ascii=False)}')
     fm.append("tags:")
     fm += [f"  - {t}" for t in tags]
     fm.append("---")
