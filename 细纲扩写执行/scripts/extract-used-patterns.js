@@ -6,7 +6,7 @@
  *
  * V4.0 新增脚本（问题3解决方案）：
  *   自动扫描最近 N 章正文，提取已用句式/意象/身体反应模式，
- *   输出结构化 JSON 供 03a 扩写时加载为 <used_patterns> 上下文。
+ *   输出结构化 JSON 供扩写时加载为 <used_patterns> 上下文。
  *   替代原来依赖用户手动维护"已用句式清单"的脆弱机制。
  *
  * 检测类别：
@@ -28,7 +28,7 @@ const path = require('path');
 const USAGE = `Usage: node extract-used-patterns.js [--json] [--n=5] <chapter-files...>
 
 Extract used patterns from recent N chapters for cross-chapter dedup.
-Outputs JSON for 03a to load as <used_patterns> context.
+Outputs JSON to load as <used_patterns> context.
 Report-only. Never rewrites text.`;
 
 // ════════════════════════════════════════════════════════════
@@ -556,7 +556,7 @@ function printReport(result) {
   }
 
   console.log('');
-  console.log('提示: 使用 --json 获取机器可读的 JSON 输出，供 03a 加载为 <used_patterns>。');
+  console.log('提示: 使用 --json 获取机器可读的 JSON 输出，供扩写时加载为 <used_patterns>。');
 }
 
 main();

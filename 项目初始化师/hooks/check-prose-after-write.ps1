@@ -6,10 +6,10 @@
 # 跨平台语义说明（V5.4 新增）：
 #   exit 0 = 无 blocking 问题（与 .sh 版本一致）
 #   exit 1 = node.js 不可用且未设置 SKIP_PROSE_CHECK=1（阻断，与 .sh 版本一致）
-#   exit 2 = 发现 blocking 级问题（需回 05 去AI味，与 .sh 版本一致）
+#   exit 2 = 发现 blocking 级问题（送正文终稿打磨师处理，与 .sh 版本一致）
 #   exit 0 + SKIP_PROSE_CHECK=1 = 用户手动跳过检测（与 .sh 版本一致）
 # 平台差异：Trae/Claude Code 的 hook 系统对 exit 2 的阻断行为不同，
-#   参考 hooks/README.md 的"跨平台 Hook Parity"章节获取各平台配置说明。
+#   各平台 hook 事件/退出码语义见 SKILL.md「第三点五步：Hook自动配置」。
 
 param(
     [Parameter(Mandatory=$true)]
@@ -113,7 +113,7 @@ Write-Host "[check-prose-after-write] $fileName : blocking=$blocking advisory=$a
 
 # blocking>0 时返回非零（可被平台 hook 系统捕获），但不强制阻断——由 LLM 根据报告决定
 if ($blocking -gt 0) {
-    Write-Host "  ⚠️ 发现 blocking 级问题，建议回 05 去AI味或重新生成受影响段落" -ForegroundColor Red
+    Write-Host "  ⚠️ 发现 blocking 级问题，建议交正文终稿打磨师处理或重新生成受影响段落" -ForegroundColor Red
     exit 2  # 退出码2表示有 blocking（非致命，平台可配置是否阻断）
 }
 

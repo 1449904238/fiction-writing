@@ -3,8 +3,7 @@
 /**
  * prose-utils.js — 散文检测脚本共享工具函数库
  *
- * 从 check-ai-patterns.js / check-degeneration.js / check-rhythm.js /
- * normalize-punctuation.js 中提取的公共函数，消除重复定义。
+ * 从检测类脚本中提取的公共函数，消除重复定义。
  *
  * 用法：
  *   const { stripQuoted, visibleLength, isDivider, isStructural,
@@ -15,7 +14,7 @@
  */
 
 // ──────────────────────────────────────────────────────────
-//  统一阈值常量（V5.3.1 新增 — 供 check-ai-patterns.js / check-quality-score.js 等引用）
+//  统一阈值常量
 //  消除各脚本各自硬编码阈值导致的不一致问题
 // ──────────────────────────────────────────────────────────
 
@@ -29,14 +28,14 @@ const METAPHOR_DENSITY_BLOCK = 4.0;
 const BURSTINESS_CV_THRESHOLD = 0.35;
 
 /**
- * burstiness CV 评分梯度阈值（V5.4.1 新增 — 供 check-quality-score.js 引用）
+ * burstiness CV 评分梯度阈值
  *
- * 说明：check-ai-patterns.js 与 check-quality-score.js 对 burstiness CV 使用不同阈值是
+ * 说明：不同检测脚本对 burstiness CV 使用不同阈值是
  * **设计意图**，而非不一致：
- *   - check-ai-patterns.js 是"AI模式检测"视角：CV < 0.35 = blocking（AI节奏指纹明显）
- *   - check-quality-score.js 是"质量评分"视角：CV 0.3/0.5 是评分梯度（满分/及格/不及格）
+ *   - AI模式检测视角：CV < 0.35 = blocking（AI节奏指纹明显）
+ *   - 质量评分视角：CV 0.3/0.5 是评分梯度（满分/及格/不及格）
  *
- * 以下常量统一管理评分梯度阈值，消除 check-quality-score.js 中的硬编码 0.3/0.5。
+ * 以下常量统一管理评分梯度阈值。
  */
 /** burstiness CV 评分满分阈值（≥此值=满分15分） */
 const BURSTINESS_CV_SCORE_FULL = 0.5;
@@ -375,7 +374,7 @@ function segmentChinese(text) {
  * AI 文本 TTR 偏低（用词重复度高），人类文本 TTR 较高。
  * V3.1 改为词级分词（segmentChinese 正向最大匹配），替代原字符级分割。
  * 词级 TTR 普遍低于字符级 TTR（因多字词被合并为单个 token），
- * 故 check-ai-patterns.js 的告警阈值已从 0.4 同步下调至 0.25。
+ * 故本工具库的告警阈值已从 0.4 同步下调至 0.25。
  * 使用滑动窗口（默认500词）避免长文本 TTR 自然下降。
  * 参考：Kobak et al. 研究发现 AI 辅助写作后 TTR 统计显著下降
  * @param {string} text - 输入文本
@@ -479,8 +478,8 @@ function calculateInfoDensityVariance(text, segmentSize = 500) {
 }
 
 // ──────────────────────────────────────────────────────────
-//  V5.3.1 新增：5个 Gate 检测函数（P1-10）
-//  供 check-ai-patterns.js 调用，检测 AI 文本中高频出现的套路化模式
+//  5 个模式检测函数
+//  供检测类脚本调用，检测 AI 文本中高频出现的套路化模式
 // ──────────────────────────────────────────────────────────
 
 /**
@@ -517,7 +516,7 @@ function detectTransitionStacking(text) {
 
 /**
  * 检测排比句式滥用
- * 1. "不是A而是B" 句式 ≥2次/章（单独出现已由 check-ai-patterns.js blocking，此处检测累计频率）
+ * 1. "不是A而是B" 句式 ≥2次/章（单独出现已由调用方 blocking，此处检测累计频率）
  * 2. 连续3+句相同结构排比（如"他XXX，他XXX，他XXX"）
  * @param {string} text - 原始全文
  * @returns {{detected: boolean, count: number, matches: Array<{text: string, position: number}>, severity: string}}

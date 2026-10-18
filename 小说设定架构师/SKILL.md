@@ -1,5 +1,6 @@
 ---
 name: novel-setting-architect
+version: 1.0.0
 description: 为中文网络小说构建高质量的独立设定架构：人物因果、冲突引擎、题材机制、世界规则与连续性。从一句灵感或既有素材开始，直接产出可创作的完整设定。
 ---
 
@@ -59,7 +60,7 @@ description: 为中文网络小说构建高质量的独立设定架构：人物�
 - 数据契约与题材结构：[`references/设定数据契约.md`](references/设定数据契约.md)、[`references/题材设计模块.md`](references/题材设计模块.md)
 - 严谨性与伏笔：[`references/协议综合.md`](references/协议综合.md)
 - 版本治理：[`references/版本治理.md`](references/版本治理.md)
-- 完整示例：[`references/示例_完整设定包/`](references/示例_完整设定包/)（都市题材四件套 + core_gate，可对照产出结构）
+- 完整示例：[`示例_设定包/`](示例_设定包/)（悬疑题材四件套 + core_gate，可对照产出结构）
 - 感官细节、人物声口、情绪颗粒度、场景氛围：按需读取对应的素材库，只抽取当前设定需要的一两类，不批量加载
 
 ## 交付

@@ -23,8 +23,13 @@ if [ "$FORCE" -eq 1 ]; then
 fi
 
 if [ -z "$CHAPTER" ]; then
-    echo "[guard-outline] 未指定 --chapter，跳过检查"
-    exit 0
+    echo "[guard-outline] 错误：必须指定章节号（--chapter <number>）"
+    exit 2  # 参数错误（与 .ps1 版本一致）
+fi
+num=$(echo "$CHAPTER" | grep -oE "[0-9]+" | head -1)
+if [ -z "$num" ]; then
+    echo "[guard-outline] 错误：章节号必须是数字（--chapter <number>）"
+    exit 2
 fi
 
 # V5.3.1: 细纲目录名从硬编码"细纲"改为支持多种命名（细纲/outline/详细大纲）
@@ -45,9 +50,29 @@ if [ -z "$DETAIL" ] || [ ! -d "$DETAIL" ]; then
     exit 1
 fi
 
-num=$(echo "$CHAPTER" | grep -oE "[0-9]+" | head -1)
-# 查找该章细纲（支持 细纲_第N章.md / 第N章 等命名）
-found=$(find "$DETAIL" -maxdepth 2 -type f \( -name "*细纲*${num}*" -o -name "*第${num}章*" \) 2>/dev/null | head -1)
+# 查找该章细纲（统一匹配规则，与 .ps1 版本一致）：
+#   1) 文件名含 "第N章"
+#   2) 文件名任一数字段数值 == N（兼容 001_xxx.md / Ch001_xxx.md / Ch0001_xxx.md 等零填充命名）
+match_chapter_outline() {
+    local base="$1" num="$2" run
+    echo "$base" | grep -q "第${num}章" && return 0
+    for run in $(echo "$base" | grep -oE '[0-9]+'); do
+        if [ "$((10#$run))" -eq "$num" ] 2>/dev/null; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+found=""
+while IFS= read -r f; do
+    [ -e "$f" ] || continue
+    base="$(basename "$f" .md)"
+    if match_chapter_outline "$base" "$num"; then
+        found="$f"
+        break
+    fi
+done < <(find "$DETAIL" -maxdepth 2 -type f -name "*.md" 2>/dev/null)
 
 if [ -n "$found" ]; then
     echo "[guard-outline] ✅ 第${num}章细纲已找到: $found"

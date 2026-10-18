@@ -23,9 +23,9 @@ if (-not (Test-Path $DraftDir)) {
     }
 }
 
-# 收集章节文件
+# 收集正文/初稿章节文件（只收章节命名 .md，与 .sh 版本一致）
 $ChapterFiles = Get-ChildItem -Path $DraftDir -Filter "*.md" | Where-Object {
-    $_.Name -match "第\d+章|chapter|正文" -or $_.Name -match "^\d+"
+    $_.Name -match "第\d+章|chapter|正文|^\d+"
 } | Sort-Object Name
 
 $TotalChapters = $ChapterFiles.Count
@@ -67,84 +67,27 @@ if ($ChapterDelta -lt 5) {
 
 # 取最近5章
 $RecentChapters = $ChapterFiles | Select-Object -Last 5
-$ChapterPaths = $RecentChapters | ForEach-Object { $_.FullName }
 
 $StartChapter = $RecentChapters[0].BaseName
 $EndChapter = $RecentChapters[-1].BaseName
 
-Write-Host "[check-rhythm] 检测第 $StartChapter ~ $EndChapter 章（共5章）的跨章节奏..." -ForegroundColor Cyan
+Write-Host "[check-rhythm-cross-chapter] 检测第 $StartChapter ~ $EndChapter 章（共5章）的跨章节奏..." -ForegroundColor Cyan
 
-# 定位node和脚本
-$Node = (Get-Command node -ErrorAction SilentlyContinue).Source
-if (-not $Node) {
-    Write-Host "⚠ 警告：未检测到 node.js，跨章节奏检测被跳过" -ForegroundColor Yellow
-    exit 0
-}
-
-$ScriptsDir = Join-Path $ProjectPath "fiction-writing\scripts"
-if (-not (Test-Path $ScriptsDir)) {
-    $ScriptsDir = Join-Path $ProjectPath "scripts"
-}
-$RhythmScript = Join-Path $ScriptsDir "check-rhythm.js"
-
-if (-not (Test-Path $RhythmScript)) {
-    Write-Host "[check-rhythm] 未找到 check-rhythm.js，跳过" -ForegroundColor Gray
-    exit 0
-}
-
-# 执行检测
-$Output = & $Node $RhythmScript --check $ChapterPaths 2>&1
-$ExitCode = $LASTEXITCODE
-
-# 输出结果
+# 明确降级：check-rhythm.js 不存在于任何技能（跨章节奏检测已并入 02b细纲质检/正文终稿打磨师）。
+# 家族约定：脚本缺失 → 明确提示并跳过（不静默、不假装阻断）。
 Write-Host ""
-Write-Host "========== 跨章节奏检测报告 ==========" -ForegroundColor Cyan
-Write-Host "范围：第 $StartChapter ~ $EndChapter 章" -ForegroundColor Cyan
-Write-Host "=======================================" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Yellow
+Write-Host "  未找到 check-rhythm.js" -ForegroundColor Yellow
+Write-Host "  跨章节奏检测已并入 02b细纲质检 / 正文终稿打磨师，本 hook 仅提示，跳过。" -ForegroundColor Yellow
+Write-Host "  如需节奏检测：在 02b细纲质检 / 正文终稿打磨 环节对最近章节做跨章节奏评审。" -ForegroundColor Yellow
+Write-Host "========================================" -ForegroundColor Yellow
 Write-Host ""
 
-if ($Output) {
-    $Output | ForEach-Object { Write-Host $_ }
-}
-
-# 检查是否有blocking问题
-$HasBlocking = $false
-if ($Output -match "blocking") {
-    $HasBlocking = $true
-}
-
-# 写入报告文件（$TrackDir 已在触发条件检查时创建）
-$ReportFile = Join-Path $TrackDir "节奏检测_${StartChapter}-${EndChapter}.md"
-$ReportContent = @"
-# 跨章节奏检测报告
-
-**检测时间**：$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
-**检测范围**：第 $StartChapter ~ $EndChapter 章（共5章）
-
-## 检测结果
-
-$($Output -join "`n")
-
-## 结论
-
-$(if ($HasBlocking) { "⚠ 发现 blocking 级问题，需要修复节奏问题后再继续写作。" } else { "✅ 无 blocking 级问题。advisory 项可选择性优化。" })
-"@
-
-$ReportContent | Out-File -FilePath $ReportFile -Encoding UTF8
-Write-Host ""
-Write-Host "[check-rhythm] 报告已写入：$ReportFile" -ForegroundColor Green
-
-# 更新追踪记录（记录本次检测的章节号，用于下次触发的差值判断）
+# 更新追踪记录（提示已发出即视为完成本轮巡检，避免每次触发重复打扰）
 $NewTracker = @{
     last_checked_chapter = $TotalChapters
     last_checked_at = (Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')
 } | ConvertTo-Json
 $NewTracker | Out-File -FilePath $TrackerFile -Encoding UTF8
-Write-Host "[check-rhythm] 追踪记录已更新：last_checked_chapter = $TotalChapters" -ForegroundColor Green
-
-if ($HasBlocking) {
-    Write-Host "[check-rhythm] ⚠ 发现 blocking 级节奏问题！" -ForegroundColor Red
-    exit 2  # blocking但非致命，exit 2提醒用户关注
-}
 
 exit 0

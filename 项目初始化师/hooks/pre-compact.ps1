@@ -37,8 +37,11 @@ if (Test-Path -LiteralPath $contextFile) {
     $snapshot += ""
 }
 
-# 2. 伏笔追踪表
-$foreshadowFile = Join-Path -Path $ProjectPath -ChildPath "追踪\伏笔.md"
+# 2. 伏笔追踪表（兼容两种命名：伏笔追踪表.md / 旧 伏笔.md，与 .sh 版本一致）
+$foreshadowFile = Join-Path -Path $ProjectPath -ChildPath "追踪\伏笔追踪表.md"
+if (-not (Test-Path -LiteralPath $foreshadowFile)) {
+    $foreshadowFile = Join-Path -Path $ProjectPath -ChildPath "追踪\伏笔.md"
+}
 if (Test-Path -LiteralPath $foreshadowFile) {
     $snapshot += "## 伏笔追踪表"
     $snapshot += ""

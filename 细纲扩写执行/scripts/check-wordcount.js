@@ -89,7 +89,7 @@ function main() {
       if (r.error) { console.log(`✗ ${path.basename(r.file)} — ${r.error}`); continue; }
       const state = r.ok ? '✓' : '✗';
       const hint = r.count < opts.min
-        ? `欠账 ${opts.min - r.count} 字（当前 ${(r.count / opts.min * 100).toFixed(0)}% of min）→ 按字数欠账定位协议重写，禁止整体注水`
+        ? `欠账 ${opts.min - r.count} 字（当前 ${(r.count / opts.min * 100).toFixed(0)}% of min）→ 按场景蓝图预算定位欠账（密点重写到预算，禁止整体注水）`
         : r.count > opts.max
           ? `超出 ${r.count - opts.max} 字 → 压过场、合并疏点、删过渡`
           : `达标，区间位置 ${((r.count - opts.min) / Math.max(1, opts.max - opts.min) * 100).toFixed(0)}%`;

@@ -17,27 +17,28 @@ if (-not $ProjectPath) {
 $ContextFile = Join-Path -Path $ProjectPath -ChildPath "追踪\上下文管理模板.md"
 $ProjectLog = Join-Path -Path $ProjectPath -ChildPath "项目日志.md"
 
-if (-not (Test-Path -LiteralPath $ContextFile)) {
-    Write-Host "错误：未找到上下文管理模板：$ContextFile"
-    exit 1
-}
+# 上下文模板缺失 → 跳过进度更新，但会话日志仍照常追加（与 .sh 版本一致）
+if (Test-Path -LiteralPath $ContextFile) {
+    # 读取当前上下文
+    $context = Get-Content -LiteralPath $ContextFile -Raw
 
-# 读取当前上下文
-$context = Get-Content -LiteralPath $ContextFile -Raw
+    # 更新字段
+    if ($CurrentChapter) {
+        $context = $context -replace '(当前进度\s*\|\s*).+?(\s*\|)', "`$1$CurrentChapter`$2"
+    }
+    if ($CompletedTask) {
+        $context = $context -replace '(上次会话结束状态\s*\|\s*).+?(\s*\|)', "`$1$CompletedTask`$2"
+    }
+    if ($NextTask) {
+        $context = $context -replace '(下次会话起始任务\s*\|\s*).+?(\s*\|)', "`$1$NextTask`$2"
+    }
 
-# 更新字段
-if ($CurrentChapter) {
-    $context = $context -replace '(当前进度\s*\|\s*).+?(\s*\|)', "`$1$CurrentChapter`$2"
+    # 写入更新后的上下文
+    $context | Set-Content -LiteralPath $ContextFile -NoNewline
+    Write-Host "上下文管理模板已更新。"
+} else {
+    Write-Host "⚠️ 未找到 追踪/上下文管理模板.md，跳过进度更新（会话日志仍会追加）"
 }
-if ($CompletedTask) {
-    $context = $context -replace '(上次会话结束状态\s*\|\s*).+?(\s*\|)', "`$1$CompletedTask`$2"
-}
-if ($NextTask) {
-    $context = $context -replace '(下次会话起始任务\s*\|\s*).+?(\s*\|)', "`$1$NextTask`$2"
-}
-
-# 写入更新后的上下文
-$context | Set-Content -LiteralPath $ContextFile -NoNewline
 
 # 追加项目日志
 $logEntry = @"
@@ -56,9 +57,9 @@ $logEntry = @"
 $logEntry | Out-File -FilePath $ProjectLog -Append
 
 Write-Host "=== 会话结束：$(Get-Date -Format 'yyyy-MM-dd HH:mm') ==="
-Write-Host "上下文管理模板已更新。"
 Write-Host "项目日志已追加。"
 Write-Host "下次会话将从以下状态恢复："
 Write-Host "  - 当前进度：$CurrentChapter"
 Write-Host "  - 已完成：$CompletedTask"
 Write-Host "  - 下一步：$NextTask"
+exit 0

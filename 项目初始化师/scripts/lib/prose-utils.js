@@ -44,6 +44,18 @@ const BURSTINESS_CV_SCORE_FULL = 0.5;
 /** burstiness CV 评分及格阈值（≥此值=及格10分，<此值=不及格0分） */
 const BURSTINESS_CV_SCORE_PASS = 0.3;
 
+/** 被动句密度告警阈值（每千字"被"字句数，超过此值=advisory）。对齐平台AI检测"被动语态占比"维度 */
+const PASSIVE_DENSITY_PER_KCHAR = 3.0;
+
+/** 段落等长检测：参与统计的最短段落长度（避开短对话行） */
+const UNIFORM_PARAGRAPH_MIN_CHARS = 30;
+
+/** 段落等长检测：连续等长段落数阈值 */
+const UNIFORM_PARAGRAPH_RUN = 4;
+
+/** 段落等长检测：长度偏差容差（±5%） */
+const UNIFORM_PARAGRAPH_TOLERANCE = 0.05;
+
 // ──────────────────────────────────────────────────────────
 //  对话引用去除
 // ──────────────────────────────────────────────────────────
@@ -634,26 +646,11 @@ function detectBreathyDialogueTags(text) {
   return { detected, count, matches, severity: detected ? 'advisory' : 'info' };
 }
 
-// ════════════════════════════════════════════════════════════
-//  V1.1 平台风控4检测器（与 ../正文终稿打磨师/scripts/lib/prose-utils.js 保持同步）
-//  对标2026平台AI治理封杀死因：提示词残留/零宽水印/被动句密度/段落等长
-// ════════════════════════════════════════════════════════════
-
-/** 被动句密度告警阈值（每千字"被"字句数，超过此值=advisory） */
-const PASSIVE_DENSITY_PER_KCHAR = 3.0;
-
-/** 段落等长检测：参与统计的最短段落长度（避开短对话行） */
-const UNIFORM_PARAGRAPH_MIN_CHARS = 30;
-
-/** 段落等长检测：连续等长段落数阈值 */
-const UNIFORM_PARAGRAPH_RUN = 4;
-
-/** 段落等长检测：长度偏差容差（±5%） */
-const UNIFORM_PARAGRAPH_TOLERANCE = 0.05;
-
 /**
- * 检测 AI 提示词/指令残留（blocking级死因——作者因正文残留AI指令被读者截图实锤）
- * 题材防误报：系统流【任务】面板/修仙"功法大纲/输出内力"为正常叙事已豁免
+ * 检测 AI 提示词/指令残留（V1.1 新增 — 平台封杀高频死因）
+ * 2026年平台治理案例中，金番作者因 AI 指令未删除被读者截图实锤。正文出现
+ * "以下是改写后的正文""根据细纲要求""好的，这是"等残留即社死级事故。
+ * 指令类残留=blocking；markdown 格式残留=advisory（属平台"格式混乱类"违规）。
  * @param {string} text - 原始全文
  * @returns {{detected: boolean, count: number, matches: Array<{text: string, label: string, severity: string, position: number}>, severity: string}}
  */
@@ -666,7 +663,7 @@ function detectPromptResidue(text) {
     // 指令引用：白名单gap防"功法大纲/作战大纲"类复合名词误报
     { re: /(?:根据|按照|依据)(?:上述|前文|本[章节卷]|的|这|该|此)?(?:份|个|章|节)?(?:细纲|大纲|任务书|提示词)/, label: '指令引用', severity: 'blocking' },
     { re: /(?:写作|改写|续写|扩写|生成)(?:要求|提示|指令)[:：]/, label: '任务说明', severity: 'blocking' },
-    // 指令标记：须后接写作元话语。系统流网文的【任务】击杀面板是正常叙事，不放行会全军误伤
+    // 指令标记：须后接写作元话语（本章/剧情/主角等）。系统流网文的【任务】击杀/【任务完成】面板是正常叙事，不放行会全军误伤
     { re: /^【(?:任务|要求|指令|设定|角色|人物|大纲|细纲)】[^。\n]{0,30}?(?:本章|本段|写作|改写|续写|扩写|剧情|情节|主角|配角|女主|男主|视角|口吻|字数|根据|按照)/, label: '指令标记', severity: 'blocking' },
     { re: /^(?:角色|人物|主角|配角|世界观|背景)设定[:：]/, label: '设定块残留', severity: 'blocking' },
     { re: /^(?:字数|篇幅)(?:要求|限制)[:：]/, label: '字数要求残留', severity: 'blocking' },
@@ -695,7 +692,9 @@ function detectPromptResidue(text) {
 }
 
 /**
- * 检测被动句密度（advisory级——对齐平台"被动语态占比"AI指纹维度）
+ * 检测被动句密度（V1.1 新增 — 对齐平台"被动语态占比>18.5%"AI指纹维度）
+ * 平台英文口径被动>18.5%触发复核；中文按"被"字句每千字密度衡量，
+ * 正常中文叙事约1-2处/千字，AI长文可达5+。超过3处/千字报advisory。
  * @param {string} text - 原始全文
  * @returns {{detected: boolean, count: number, density: number, severity: string}}
  */
@@ -710,7 +709,8 @@ function detectPassiveVoice(text) {
 }
 
 /**
- * 扫描不可见水印字符（blocking级——平台逆向解析商用AI工具嵌入的不可见结构水印）
+ * 扫描不可见水印字符（V1.1 新增 — 平台逆向解析商用AI工具嵌入的不可见结构水印）
+ * 平台扫描 UTF-8 流中零宽空格/U+2063 等字符定位AI生成文本；正文出现即阻断。
  * @param {string} text - 原始全文
  * @returns {{detected: boolean, count: number, matches: Array<{name: string, code: string, position: number}>, severity: string}}
  */
@@ -736,7 +736,9 @@ function detectInvisibleChars(text) {
 }
 
 /**
- * 检测段落长度机器规律（advisory级——平台"结构失常类"批量生成指纹）
+ * 检测段落长度机器规律（V1.1 新增 — 平台"结构失常类"批量生成指纹）
+ * AI批量生成的章节段落长度高度均匀（连续等长），人类写作段落长度有自然波动。
+ * 仅统计≥30字的实质段落（避开短对话行）；连续4段长度偏差<±5%报advisory。
  * @param {string} text - 原始全文
  * @returns {{detected: boolean, count: number, runs: Array<{startLine: number, lengths: number[]}>, severity: string}}
  */

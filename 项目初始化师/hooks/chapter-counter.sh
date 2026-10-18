@@ -77,8 +77,8 @@ else
     current_volume=0
 fi
 
-# 距下次审稿：3的倍数触发，计算还需多少章到达下一个3的倍数
-chapters_to_next_audit=$(( (3 - (chapter_count % 3)) % 3 ))
+# 距下次审稿：每5章小审（对齐内置审稿周期），计算还需多少章到达下一个5的倍数
+chapters_to_next_audit=$(( (5 - (chapter_count % 5)) % 5 ))
 
 # ── 5. 输出进度看板 ──
 echo ""
@@ -93,20 +93,22 @@ echo "├── 距下次审稿：${chapters_to_next_audit} 章"
 echo "└── 细纲存量：${outline_stock} 章（细纲 ${outline_count} - 正文 ${chapter_count}）"
 echo ""
 
-# ── 6. 触发提醒：3的倍数（3, 6, 9, 12...）──
-if [ "$chapter_count" -gt 0 ] && [ $((chapter_count % 3)) -eq 0 ]; then
+# ── 6. 触发提醒：5的倍数（5, 10, 15...）──
+if [ "$chapter_count" -gt 0 ] && [ $((chapter_count % 5)) -eq 0 ]; then
     echo "⚠️ 已写 ${chapter_count} 章，建议执行："
-    echo "  1. 09 多视角审稿（每3章必执行）"
+    echo "  1. 周期性审稿（内置：每5章小审/每10章大审）"
     echo "  2. 02a 补纲（如细纲不足5章存量）"
     echo "  3. 02b 细纲质检（补纲后必执行）"
     echo ""
 fi
 
 # ── 7. 触发提醒：10的倍数（10, 20, 30...）──
+# 伏笔超期阈值：25 章（与 detect-story-gaps.sh 一致，见其注释）
+FORESHADOW_OVERDUE_THRESHOLD=25
 if [ "$chapter_count" -gt 0 ] && [ $((chapter_count % 10)) -eq 0 ]; then
     echo "⚠️ 已写 ${chapter_count} 章，额外建议："
-    echo "  4. 衔接包归档（compress-handoff.js 压缩旧衔接包）"
-    echo "  5. 伏笔追踪表检查（超20章未回收的伏笔需关注）"
+    echo "  4. 旧衔接包可按需压缩归档"
+    echo "  5. 伏笔追踪表检查（超 ${FORESHADOW_OVERDUE_THRESHOLD} 章未回收的伏笔需人工复核）"
     echo ""
 fi
 

@@ -10,7 +10,7 @@
 #   exit 1 = 细纲缺失或目录不存在（阻断正文写作，与 .sh 版本一致）
 #   exit 2 = 参数错误（-ProjectPath 缺失或 -Chapter <= 0，与 .sh 版本一致）
 # 平台差异：部分平台（如 Codex）可能不支持 PreToolUse hook，
-#   参考 hooks/README.md 的"跨平台 Hook Parity"章节获取降级方案。
+#   各平台 hook 事件/退出码语义见 SKILL.md「第三点五步：Hook自动配置」，无 PreToolUse 时可改由写前自检提示代替。
 
 param(
     [string]$ProjectPath = "",
@@ -51,17 +51,24 @@ if (-not $detailDir -or -not (Test-Path -LiteralPath $detailDir)) {
 }
 
 # 查找对应章节的细纲文件
-$chapStr = "{0:D3}" -f $Chapter  # 格式化为 001, 002, 003...
-$chapStr2 = "{0}" -f $Chapter     # 原始格式 1, 2, 3...
+# 统一匹配规则（与 .sh 版本一致）：
+#   1) 文件名含 "第N章"
+#   2) 文件名任一数字段数值 == N（兼容 001_xxx.md / Ch001_xxx.md / Ch0001_xxx.md 等零填充命名）
+function Test-ChapterOutlineMatch {
+    param([string]$BaseName, [int]$Chapter)
+    if ($BaseName -match "第${Chapter}章") { return $true }
+    $runs = [regex]::Matches($BaseName, '[0-9]+')
+    foreach ($r in $runs) {
+        if ([int]$r.Value -eq $Chapter) { return $true }
+    }
+    return $false
+}
 
 $found = $false
 $files = Get-ChildItem -LiteralPath $detailDir -Filter "*.md" -ErrorAction SilentlyContinue
 
 foreach ($f in $files) {
-    # 尝试多种命名格式：001_xxx.md, 第1章_xxx.md, Ch001_xxx.md
-    if ($f.BaseName -match "(^|[^0-9])$chapStr([^0-9]|$)" -or 
-        $f.BaseName -match "(^|[^0-9])$chapStr2([^0-9]|$)" -or
-        $f.BaseName -match "第${chapStr2}章") {
+    if (Test-ChapterOutlineMatch $f.BaseName $Chapter) {
         $found = $true
         Write-Host "✅ 第${Chapter}章细纲已就绪：$($f.Name)"
         break

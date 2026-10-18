@@ -3,20 +3,28 @@
 $ErrorActionPreference = 'Stop'
 $skillRoot = Split-Path -Parent $PSScriptRoot
 $validator = Join-Path $PSScriptRoot 'validate_setting_package.ps1'
-$exampleRoot = Join-Path $skillRoot 'references\示例_最小设定包'
+$exampleRoot = Join-Path $skillRoot '示例_设定包'
 $templateRoot = Join-Path $skillRoot 'references\题材模板'
 $testRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("novel-setting-validator-" + [guid]::NewGuid().ToString('N'))
 $passed = 0
 $failed = 0
+$script:shellName = $null
 
 function Save-Json($Object, [string]$Path) {
     $Object | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $Path -Encoding UTF8
 }
 
+function Get-ShellName {
+    if ($null -eq $script:shellName) {
+        if (Get-Command pwsh -ErrorAction SilentlyContinue) { $script:shellName = 'pwsh' } else { $script:shellName = 'powershell' }
+    }
+    return $script:shellName
+}
+
 function Invoke-Validation([string]$PackagePath, [string]$Mode) {
     $previousPreference = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $validator -PackagePath $PackagePath -Mode $Mode 1>$null 2>$null
+    & (Get-ShellName) -NoProfile -ExecutionPolicy Bypass -File $validator -PackagePath $PackagePath -Mode $Mode 1>$null 2>$null
     $ErrorActionPreference = $previousPreference
     return $LASTEXITCODE
 }
@@ -31,28 +39,36 @@ function Assert-Exit([string]$Name, [int]$Actual, [int]$Expected) {
     }
 }
 
-function Copy-RomanceProbe([string]$Name) {
+# 题材模板引用的角色 id 是旧演示人物(char-lin/char-su)，注入前重映射为示例包现有角色，
+# 使“每类题材 data 都能并入一个合法设定包并通过 full 校验”的断言成立。
+function Resolve-TemplateIds([string]$TemplateText, $Metadata) {
+    $protagonist = @($Metadata.characters | Where-Object { $_.role -eq '主角' } | Select-Object -First 1).id
+    $other = @($Metadata.characters | Where-Object { $_.id -ne $protagonist } | Select-Object -First 1).id
+    if (-not $protagonist -or -not $other) { return $TemplateText }
+    return ($TemplateText -replace '"char-lin"', ('"' + $protagonist + '"')) -replace '"char-su"', ('"' + $other + '"')
+}
+
+function Copy-ExamplePackage([string]$Name) {
     $target = Join-Path $testRoot $Name
-    Copy-Item -LiteralPath (Join-Path $exampleRoot 'romance') -Destination $target -Recurse
+    Copy-Item -LiteralPath $exampleRoot -Destination $target -Recurse
     return $target
 }
 
 New-Item -ItemType Directory -Path $testRoot | Out-Null
 
 try {
-    foreach ($genre in @('romance', 'progression')) {
-        $package = Join-Path $exampleRoot $genre
-        Assert-Exit "$genre example core" (Invoke-Validation $package 'core') 0
-        Assert-Exit "$genre example full" (Invoke-Validation $package 'full') 0
-    }
+    Assert-Exit 'example root core' (Invoke-Validation $exampleRoot 'core') 0
+    Assert-Exit 'example root full' (Invoke-Validation $exampleRoot 'full') 0
 
     foreach ($kind in @('progression', 'urban', 'romance', 'mystery', 'historical', 'science_fiction')) {
-        $package = Copy-RomanceProbe "genre-$kind"
+        $package = Copy-ExamplePackage "genre-$kind"
         $metadataPath = Join-Path $package '01_设定元数据.json'
         $manifestPath = Join-Path $package 'manifest.json'
         $metadata = Get-Content -LiteralPath $metadataPath -Raw -Encoding UTF8 | ConvertFrom-Json
         $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        $template = Get-Content -LiteralPath (Join-Path $templateRoot "$kind.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+        $templateText = Get-Content -LiteralPath (Join-Path $templateRoot "$kind.json") -Raw -Encoding UTF8
+        $templateText = Resolve-TemplateIds $templateText $metadata
+        $template = $templateText | ConvertFrom-Json
         $template | Add-Member -NotePropertyName owns_main_conflict -NotePropertyValue $true
         $metadata.genre_module.primary = $template
         $manifest.genre_modules = @($kind)
@@ -61,7 +77,7 @@ try {
         Assert-Exit "$kind template full" (Invoke-Validation $package 'full') 0
     }
 
-    $package = Copy-RomanceProbe 'core-only'
+    $package = Copy-ExamplePackage 'core-only'
     $metadataPath = Join-Path $package '01_设定元数据.json'
     $constraintsPath = Join-Path $package '02_写作约束.json'
     $metadata = Get-Content -LiteralPath $metadataPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -76,40 +92,41 @@ try {
     Assert-Exit 'core-only package core' (Invoke-Validation $package 'core') 0
     Assert-Exit 'core-only package full' (Invoke-Validation $package 'full') 1
 
-    $package = Copy-RomanceProbe 'secondary-shell'
+    $package = Copy-ExamplePackage 'secondary-shell'
     $metadataPath = Join-Path $package '01_设定元数据.json'
     $manifestPath = Join-Path $package 'manifest.json'
     $metadata = Get-Content -LiteralPath $metadataPath -Raw -Encoding UTF8 | ConvertFrom-Json
     $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $primaryKind = $metadata.genre_module.primary.kind
     $metadata.genre_module.secondary = @([PSCustomObject]@{ kind = 'urban'; contribution = '通过职业资源压力改变关系选择' })
-    $manifest.genre_modules = @('romance', 'urban')
+    $manifest.genre_modules = @($primaryKind, 'urban')
     Save-Json $metadata $metadataPath
     Save-Json $manifest $manifestPath
     Assert-Exit 'secondary shell core' (Invoke-Validation $package 'core') 0
     Assert-Exit 'secondary shell full' (Invoke-Validation $package 'full') 1
 
-    $package = Copy-RomanceProbe 'self-relationship'
+    $package = Copy-ExamplePackage 'self-relationship'
     $metadataPath = Join-Path $package '01_设定元数据.json'
     $metadata = Get-Content -LiteralPath $metadataPath -Raw -Encoding UTF8 | ConvertFrom-Json
     $metadata.relationships[0].b_id = $metadata.relationships[0].a_id
     Save-Json $metadata $metadataPath
     Assert-Exit 'self relationship rejected' (Invoke-Validation $package 'full') 1
 
-    $package = Copy-RomanceProbe 'empty-hard-facts'
+    $package = Copy-ExamplePackage 'empty-hard-facts'
     $constraintsPath = Join-Path $package '02_写作约束.json'
     $constraints = Get-Content -LiteralPath $constraintsPath -Raw -Encoding UTF8 | ConvertFrom-Json
     $constraints.continuity_guardrails.hard_facts = @()
     Save-Json $constraints $constraintsPath
     Assert-Exit 'empty hard facts rejected' (Invoke-Validation $package 'full') 1
 
-    $package = Copy-RomanceProbe 'placeholder'
+    $package = Copy-ExamplePackage 'placeholder'
     $metadataPath = Join-Path $package '01_设定元数据.json'
     $metadata = Get-Content -LiteralPath $metadataPath -Raw -Encoding UTF8 | ConvertFrom-Json
     $metadata.novel.premise = '待填写'
     Save-Json $metadata $metadataPath
     Assert-Exit 'placeholder rejected' (Invoke-Validation $package 'full') 1
 
-    $package = Copy-RomanceProbe 'empty-brief'
+    $package = Copy-ExamplePackage 'empty-brief'
     Set-Content -LiteralPath (Join-Path $package '00_创作简报.md') -Value '' -Encoding UTF8
     Assert-Exit 'empty brief rejected' (Invoke-Validation $package 'full') 1
 }

@@ -96,7 +96,7 @@ fi
 echo "[check-prose-after-write] $FILE_NAME : blocking=$blocking advisory=$advisory 字数=$char_count"
 
 if [ "$blocking" -gt 0 ]; then
-    echo "  ⚠️ 发现 blocking 级问题，建议回 05 去AI味或重新生成受影响段落"
+    echo "  ⚠️ 发现 blocking 级问题，建议交正文终稿打磨师处理或重新生成受影响段落"
     exit 2
 fi
 

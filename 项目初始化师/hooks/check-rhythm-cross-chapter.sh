@@ -24,10 +24,13 @@ if [ -z "$DRAFT_DIR" ]; then
     exit 0
 fi
 
-# 收集章节文件（匹配 第N章/chapter/数字开头 的.md文件）
+# 收集正文/初稿章节文件（只收章节命名 .md，与 .ps1 版本一致）
 CHAPTER_FILES=()
 while IFS= read -r -d '' file; do
-    CHAPTER_FILES+=("$file")
+    fname="$(basename "$file")"
+    if echo "$fname" | grep -qiE "第[0-9]+章|chapter|ch[0-9]+|^[0-9]"; then
+        CHAPTER_FILES+=("$file")
+    fi
 done < <(find "$DRAFT_DIR" -maxdepth 1 -name "*.md" -print0 | sort -z)
 
 TOTAL_CHAPTERS=${#CHAPTER_FILES[@]}
@@ -70,89 +73,26 @@ for ((i = START_IDX; i < TOTAL_CHAPTERS; i++)); do
 done
 
 START_CHAPTER=$(basename "${RECENT_CHAPTERS[0]}" .md)
-END_CHAPTER=$(basename "${RECENT_CHAPTERS[-1]}" .md)
+END_CHAPTER=$(basename "${RECENT_CHAPTERS[${#RECENT_CHAPTERS[@]}-1]}" .md)
 
-echo "[check-rhythm] 检测第 $START_CHAPTER ~ $END_CHAPTER 章（共5章）的跨章节奏..."
+echo "[check-rhythm-cross-chapter] 检测第 $START_CHAPTER ~ $END_CHAPTER 章（共5章）的跨章节奏..."
 
-# 定位node和脚本
-NODE="$(command -v node || true)"
-if [ -z "$NODE" ]; then
-    echo "⚠ 警告：未检测到 node.js，跨章节奏检测被跳过"
-    exit 0
-fi
-
-SCRIPTS_DIR=""
-for candidate in "$PROJECT_PATH/fiction-writing/scripts" "$PROJECT_PATH/scripts"; do
-    if [ -d "$candidate" ]; then
-        SCRIPTS_DIR="$candidate"
-        break
-    fi
-done
-
-if [ -z "$SCRIPTS_DIR" ]; then
-    echo "[check-rhythm] 未找到 scripts 目录，跳过"
-    exit 0
-fi
-
-RHYTHM_SCRIPT="$SCRIPTS_DIR/check-rhythm.js"
-if [ ! -f "$RHYTHM_SCRIPT" ]; then
-    echo "[check-rhythm] 未找到 check-rhythm.js，跳过"
-    exit 0
-fi
-
-# 执行检测
-OUTPUT=$("$NODE" "$RHYTHM_SCRIPT" --check "${RECENT_CHAPTERS[@]}" 2>&1)
-EXIT_CODE=$?
-
-# 输出结果
+# 明确降级：check-rhythm.js 不存在于任何技能（跨章节奏检测已并入 02b细纲质检/正文终稿打磨师）。
+# 家族约定：脚本缺失 → 明确提示并跳过（不静默、不假装阻断）。
 echo ""
-echo "========== 跨章节奏检测报告 =========="
-echo "范围：第 $START_CHAPTER ~ $END_CHAPTER 章"
-echo "======================================="
+echo "========================================"
+echo "  未找到 check-rhythm.js"
+echo "  跨章节奏检测已并入 02b细纲质检 / 正文终稿打磨师，本 hook 仅提示，跳过。"
+echo "  如需节奏检测：在 02b细纲质检 / 正文终稿打磨 环节对最近章节做跨章节奏评审。"
+echo "========================================"
 echo ""
 
-if [ -n "$OUTPUT" ]; then
-    echo "$OUTPUT"
-fi
-
-# 检查是否有blocking问题
-HAS_BLOCKING=false
-if echo "$OUTPUT" | grep -q "blocking"; then
-    HAS_BLOCKING=true
-fi
-
-# 写入报告文件（TRACK_DIR 已在触发条件检查时创建）
-REPORT_FILE="$TRACK_DIR/节奏检测_${START_CHAPTER}-${END_CHAPTER}.md"
-cat > "$REPORT_FILE" << EOF
-# 跨章节奏检测报告
-
-**检测时间**：$(date '+%Y-%m-%d %H:%M:%S')
-**检测范围**：第 $START_CHAPTER ~ $END_CHAPTER 章（共5章）
-
-## 检测结果
-
-$OUTPUT
-
-## 结论
-
-$(if [ "$HAS_BLOCKING" = true ]; then echo "⚠ 发现 blocking 级问题，需要修复节奏问题后再继续写作。"; else echo "✅ 无 blocking 级问题。advisory 项可选择性优化。"; fi)
-EOF
-
-echo ""
-echo "[check-rhythm] 报告已写入：$REPORT_FILE"
-
-# 更新追踪记录（记录本次检测的章节号，用于下次触发的差值判断）
+# 更新追踪记录（提示已发出即视为完成本轮巡检，避免每次触发重复打扰）
 cat > "$TRACKER_FILE" << EOF
 {
   "last_checked_chapter": $TOTAL_CHAPTERS,
   "last_checked_at": "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 }
 EOF
-echo "[check-rhythm] 追踪记录已更新：last_checked_chapter = $TOTAL_CHAPTERS"
-
-if [ "$HAS_BLOCKING" = true ]; then
-    echo "[check-rhythm] ⚠ 发现 blocking 级节奏问题！"
-    exit 2  # blocking但非致命，exit 2提醒用户关注
-fi
 
 exit 0

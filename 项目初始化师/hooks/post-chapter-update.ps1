@@ -1,9 +1,9 @@
 ﻿# post-chapter-update.ps1 — 章节终稿后上下文更新 hook (Windows/PowerShell)
 # 对标 post-chapter-update.sh 的 PowerShell 版本
 #
-# 触发时机：每章终稿后自动执行（05 去AI味完成、脚本收尾之后）
+# 触发时机：每章终稿后自动执行（正文终稿打磨师交付终稿、脚本收尾之后）
 # 作用：
-#   1. 读取最近修改的衔接包 JSON 文件（schemas/handoff-package.schema.json 格式）
+#   1. 读取最近修改的衔接包/delta JSON（自动检测 细纲/ 或 追踪/ 下最近的 *handoff*.json，格式以 02a 约定为准）
 #   2. 从正文中提取角色状态变化（简化版：搜索角色名+状态关键词）
 #   3. 更新 追踪/上下文管理模板.md 中的角色状态表和伏笔追踪表
 #   4. 生成断点快照（当前章号、角色状态、活跃伏笔、下一步任务）
@@ -85,9 +85,11 @@ if (-not (Test-Path $TrackDir)) {
 
 $handoffData = $null
 $handoffPath = $HandoffFile
+$handoffKind = ""   # handoff=旧逐章衔接包JSON；delta/md=新卷聚合细纲产物
 
 if ([string]::IsNullOrEmpty($handoffPath)) {
-    # 自动检测：在 细纲/ 和 追踪/ 目录下搜索最近修改的 *handoff*.json
+    # 自动检测（同时兼容旧逐章 handoff JSON 与新卷聚合细纲产物）：
+    #   *handoff*.json（旧） / *delta.json / *细纲与衔接*.md（新）
     $searchDirs = @(
         (Join-Path $ProjectPath "细纲"),
         (Join-Path $ProjectPath "追踪"),
@@ -96,7 +98,9 @@ if ([string]::IsNullOrEmpty($handoffPath)) {
     $candidates = @()
     foreach ($dir in $searchDirs) {
         if (Test-Path $dir) {
-            $found = Get-ChildItem -Path $dir -Recurse -Filter "*handoff*.json" -File -ErrorAction SilentlyContinue
+            $found = Get-ChildItem -Path $dir -Recurse -File -ErrorAction SilentlyContinue | Where-Object {
+                $_.Name -like '*handoff*.json' -or $_.Name -like '*delta.json' -or $_.Name -like '*细纲与衔接*.md'
+            }
             if ($found) { $candidates += $found }
         }
     }
@@ -104,10 +108,25 @@ if ([string]::IsNullOrEmpty($handoffPath)) {
         # 取最近修改的
         $latest = $candidates | Sort-Object LastWriteTime -Descending | Select-Object -First 1
         $handoffPath = $latest.FullName
+        if ($latest.Name -like '*handoff*.json') {
+            $handoffKind = "handoff"
+        } elseif ($latest.Name -like '*delta.json') {
+            $handoffKind = "delta"
+        } else {
+            $handoffKind = "md"
+        }
     }
 }
 
-if (-not [string]::IsNullOrEmpty($handoffPath) -and (Test-Path $handoffPath)) {
+# 显式传入的 -HandoffFile 也按文件名判定类型
+if (-not [string]::IsNullOrEmpty($handoffPath) -and $handoffKind -eq "") {
+    $leaf = Split-Path -Leaf $handoffPath
+    if ($leaf -like '*handoff*.json') { $handoffKind = "handoff" }
+    elseif ($leaf -like '*delta.json') { $handoffKind = "delta" }
+    elseif ($leaf -like '*细纲与衔接*.md') { $handoffKind = "md" }
+}
+
+if (-not [string]::IsNullOrEmpty($handoffPath) -and (Test-Path $handoffPath) -and $handoffKind -eq "handoff") {
     Write-Log "找到衔接包 JSON: $handoffPath" "Green"
     $raw = Read-FileUtf8 $handoffPath
     try {
@@ -142,38 +161,10 @@ if (-not [string]::IsNullOrEmpty($chapterPath) -and (Test-Path $chapterPath)) {
 }
 
 # ──────────────────────────────────────────────────────────
-#  3. 降级处理：找不到衔接包 JSON
+#  3. 降级处理：找不到可用的逐章衔接包 JSON
 # ──────────────────────────────────────────────────────────
 
-if ($null -eq $handoffData) {
-    Write-Log "" "Yellow"
-    Write-Log "========================================" "Yellow"
-    Write-Log "  降级提示：未找到衔接包 JSON 文件" "Yellow"
-    Write-Log "  请手动更新上下文管理模板：" "Yellow"
-    Write-Log "    - 更新 追踪/上下文管理模板.md 中的角色状态表" "Yellow"
-    Write-Log "    - 更新 追踪/上下文管理模板.md 中的伏笔追踪表" "Yellow"
-    Write-Log "    - 记录当前章号、角色状态、活跃伏笔、下一步任务" "Yellow"
-    Write-Log "========================================" "Yellow"
-    Write-Log "" "Yellow"
-
-    # 即使没有衔接包，也尝试从正文中提取角色状态（简化版）
-    if ($chapterContent) {
-        $extractedStates = Extract-CharacterStatesFromProse $chapterContent
-        if ($extractedStates.Count -gt 0) {
-            Write-Log "（降级）从正文提取到 $($extractedStates.Count) 个角色状态变化提示：" "Cyan"
-            foreach ($s in $extractedStates) {
-                Write-Log "  - $s" "Gray"
-            }
-        }
-    }
-    exit 0
-}
-
-# ──────────────────────────────────────────────────────────
-#  4. 从正文中提取角色状态变化（简化版）
-# ──────────────────────────────────────────────────────────
-
-# 角色状态关键词（简化版检测）
+# 角色状态关键词（简化版检测）——提前定义，供降级分支与正文提取共用
 $STATE_KEYWORDS = @(
     '受伤', '骨折', '昏迷', '苏醒', '突破', '升级', '恢复', '死亡', '消失',
     '获得', '失去', '夺', '吞', '服', '进入', '离开', '到达', '发现', '得知',
@@ -216,6 +207,37 @@ function Extract-CharacterStatesFromProse([string]$text) {
     }
     return $results
 }
+
+if ($null -eq $handoffData) {
+    Write-Log "" "Yellow"
+    Write-Log "========================================" "Yellow"
+    if ($handoffKind -in @("delta", "md")) {
+        Write-Log "  降级提示：检测到新卷聚合细纲产物（$handoffPath）" "Yellow"
+        Write-Log "  当前细纲以 卷X_delta.json / 卷X_细纲与衔接.md 卷级聚合形态交付，" "Yellow"
+        Write-Log "  无逐章 handoff JSON 可供本 hook 精确更新角色/伏笔状态。" "Yellow"
+        Write-Log "  上下文持久化状态以 细纲生成(02a) 的 state/state.json 为准；" "Yellow"
+        Write-Log "  如需更新 追踪/上下文管理模板.md，请人工确认或读取最新卷 delta 同步。" "Yellow"
+    } else {
+        Write-Log "  降级提示：未找到可用的逐章衔接包 JSON" "Yellow"
+        Write-Log "  请手动更新上下文管理模板：" "Yellow"
+        Write-Log "    - 更新 追踪/上下文管理模板.md 中的角色状态表" "Yellow"
+        Write-Log "    - 更新 追踪/上下文管理模板.md 中的伏笔追踪表" "Yellow"
+        Write-Log "    - 记录当前章号、角色状态、活跃伏笔、下一步任务" "Yellow"
+    }
+    Write-Log "========================================" "Yellow"
+    Write-Log "" "Yellow"
+
+    # 即使没有衔接包，也尝试从正文中提取角色状态（简化版，仅当正文存在时给出提示）
+    if ($chapterContent) {
+        Write-Log "（降级）已读取正文，但无逐章衔接包角色名，无法精确提取角色状态变化。" "Yellow"
+        Write-Log "  建议人工核对正文中的角色状态变化并同步到上下文管理模板。" "Yellow"
+    }
+    exit 0
+}
+
+# ──────────────────────────────────────────────────────────
+#  4. 从正文中提取角色状态变化（简化版）
+# ──────────────────────────────────────────────────────────
 
 $proseStateChanges = @()
 if ($chapterContent) {
@@ -338,10 +360,10 @@ if (-not (Test-Path $SnapshotDir)) {
 
 $nextTask = "Ch.$($chapterNo + 1) 细纲生成（02a）+ 扩写（03a）"
 if ($chapterNo -gt 0) {
-    # 根据当前章数推断下一步
-    $mod3 = $chapterNo % 3
-    if ($mod3 -eq 0) {
-        $nextTask = "每3章审稿（09 多视角审稿，4-Agent 必执行）+ 补纲 5-10 章（02a 滚动建纲）"
+    # 根据当前章数推断下一步（审稿周期：每5章小审/每10章大审，卷末或质量存疑随时审）
+    $mod5 = $chapterNo % 5
+    if ($mod5 -eq 0) {
+        $nextTask = "周期性审稿（内置：每5章小审/每10章大审）+ 补纲 5-10 章（02a 滚动建纲）"
     }
 }
 
@@ -412,20 +434,9 @@ if (Test-Path $telemetryScript) {
     Write-Log "check-rule-execution.js 未找到，跳过遥测" "Yellow"
 }
 
-# Dashboard生成
-$dashboardScript = Join-Path $ScriptsDir "generate-dashboard.js"
-if (Test-Path $dashboardScript) {
-    Write-Log "生成HTML进度面板..." "Cyan"
-    $dashboardOutput = Join-Path $TrackDir "dashboard.html"
-    & node $dashboardScript --project $ProjectPath --output $dashboardOutput 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        Write-Log "HTML进度面板已生成: $dashboardOutput" "Green"
-    } else {
-        Write-Log "Dashboard生成跳过（node或脚本不可用）" "Yellow"
-    }
-} else {
-    Write-Log "generate-dashboard.js 未找到，跳过Dashboard" "Yellow"
-}
+# Dashboard生成（明确降级：generate-dashboard.js 在任何技能中均不存在）
+# 家族约定：脚本缺失 → 明确提示并跳过（不静默、不假装阻断）。
+Write-Log "未找到 generate-dashboard.js —— HTML 进度面板/看板生成不在本流水线 hooks 职责内，本 hook 仅提示，跳过。" "Yellow"
 
 # ──────────────────────────────────────────────────────────
 #  7. 汇总输出
@@ -440,8 +451,7 @@ Write-Log "  伏笔追踪: $(if($handoffData.foreshadowing){$handoffData.foresha
 Write-Log "  正文状态提示: $($proseStateChanges.Count) 条" "Cyan"
 Write-Log "  上下文模板: $ContextFile" "Cyan"
 Write-Log "  断点快照: $snapshotFile" "Cyan"
-Write-Log "  规则遥测: 追踪/rule-execution-telemetry.json" "Cyan"
-Write-Log "  进度面板: 追踪/dashboard.html" "Cyan"
+Write-Log "  规则遥测: 追踪/rule-execution-telemetry.json（若脚本可用）" "Cyan"
 Write-Log "  下一步: $nextTask" "Cyan"
 Write-Log "========================================" "Cyan"
 

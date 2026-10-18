@@ -16,7 +16,7 @@ $ProjectLog = Join-Path -Path $ProjectPath -ChildPath "项目日志.md"
 
 # 1. 检查上下文管理模板是否存在
 if (Test-Path -LiteralPath $ContextFile) {
-    Write-Host "=== 会话启动：$(Get-Date -Format 'yyyy-MM-dd HH:mm') ===" | Out-File -FilePath $ProjectLog -Append
+    Write-Output "=== 会话启动：$(Get-Date -Format 'yyyy-MM-dd HH:mm') ===" | Out-File -FilePath $ProjectLog -Append
     Write-Host "已加载上下文管理模板：$ContextFile"
     
     # 输出模板摘要

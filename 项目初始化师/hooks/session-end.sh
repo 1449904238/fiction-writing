@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # session-end.sh — 会话结束 hook (Linux/Mac)
-# 更新上下文管理模板进度，并追加格式化会话日志到 追踪/session-log.txt
-# 与 session-end.ps1 功能对齐
+# 更新上下文管理模板进度，并追加格式化会话日志到项目根 项目日志.md
+# 与 session-end.ps1 功能对齐（日志文件统一为 项目日志.md）
 set -u
 PROJECT_PATH=""
 COMPLETED=""
@@ -44,13 +44,21 @@ else
     echo "[session-end] ⚠️ 未找到 追踪/上下文管理模板.md，跳过进度更新"
 fi
 
-# 2. 追加格式化会话日志（包含时间戳、章节号、完成状态、下次任务）
-LOG="$TRACKING/session-log.txt"
-mkdir -p "$TRACKING"
+# 2. 追加格式化会话日志（与 session-end.ps1 一致：写入项目根 项目日志.md）
+PROJECT_LOG="$PROJECT_PATH/项目日志.md"
 {
-    echo "[$TS] chapter=$CHAPTER completed=$COMPLETED next=$NEXT"
-} >> "$LOG"
-echo "[session-end] 会话日志已追加到 $LOG"
+    echo ""
+    echo "---"
+    echo ""
+    echo "## 会话记录 $TS"
+    echo ""
+    echo "| 项目 | 内容 |"
+    echo "|------|------|"
+    echo "| 完成任务 | $COMPLETED |"
+    echo "| 当前章节 | $CHAPTER |"
+    echo "| 下一步 | $NEXT |"
+} >> "$PROJECT_LOG"
+echo "[session-end] 会话日志已追加到 $PROJECT_LOG"
 echo ""
 echo "下次会话将从以下状态恢复："
 echo "  - 当前进度：$CHAPTER"

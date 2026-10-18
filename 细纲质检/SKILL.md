@@ -651,7 +651,7 @@ references:
 ├─ 4. 强弱点校验：主副情节线强弱力是否分明（动作为主→动作是强力、思想是弱力，反之亦然）
 └─ 5. 红线校验：是否踩了卡 pitfalls（典型误区）
 
-参考：C:/fuhui/ObsidianStore/writer/方法论库/规则与清单/checklist_情节类型适配.json
+参考：C:/fuhui/ObsidianStore/writer/方法论库/规则与清单/checklist_情节类型适配.md
 ```
 
 ## F.7 扩写字数校验

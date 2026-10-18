@@ -2,13 +2,13 @@
 # post-chapter-update.sh — 章节终稿后上下文更新 hook (Linux/Mac/bash)
 # 对标 post-chapter-update.ps1 的 Bash 版本
 #
-# 触发时机：每章终稿后自动执行（05 去AI味完成、脚本收尾之后）
+# 触发时机：每章终稿后自动执行（正文终稿打磨师交付终稿、脚本收尾之后）
 # 作用：
-#   1. 读取最近修改的衔接包 JSON 文件（schemas/handoff-package.schema.json 格式）
+#   1. 读取最近修改的衔接包/delta JSON（自动检测 细纲/ 或 追踪/ 下最近的 *handoff*.json，格式以 02a 约定为准）
 #   2. 从正文中提取角色状态变化（简化版：搜索角色名+状态关键词）
 #   3. 更新 追踪/上下文管理模板.md 中的角色状态表和伏笔追踪表
 #   4. 生成断点快照（当前章号、角色状态、活跃伏笔、下一步任务）
-#   5. 找不到衔接包 JSON 时输出降级提示
+#   5. 找不到可用衔接包 JSON 时输出降级提示（区分旧 handoff 与新卷聚合 delta/md 产物）
 #
 # 用法：
 #   ./post-chapter-update.sh <项目根目录> [本章正文路径] [衔接包JSON路径]
@@ -16,7 +16,8 @@
 # 参数说明：
 #   $1  项目根目录（必填）
 #   $2  本章正文路径（可选，自动检测最近修改的 正文/ 目录 .md 文件）
-#   $3  衔接包 JSON 路径（可选，自动检测 细纲/ 或 追踪/ 下最近修改的 *handoff*.json）
+#   $3  衔接包 JSON 路径（可选，自动检测 细纲/ 或 追踪/ 下最近修改的
+#       *handoff*.json / *delta.json / *细纲与衔接*.md）
 #
 # 依赖：
 #   - bash 4.0+（关联数组）
@@ -171,23 +172,47 @@ log "追踪目录: $TRACK_DIR"
 HANDOFF_PATH="$HANDOFF_FILE_ARG"
 HANDOFF_DATA=""
 HANDOFF_PARSED=""
+HANDOFF_KIND=""   # handoff=旧逐章衔接包JSON；delta/md=新卷聚合细纲产物
+
+# 按文件名判定衔接包产物类型
+classify_handoff() {
+    local leaf
+    leaf="$(basename "$1" 2>/dev/null)"
+    case "$leaf" in
+        *handoff*.json)   echo "handoff" ;;
+        *delta.json)      echo "delta" ;;
+        *细纲与衔接*.md)   echo "md" ;;
+        *)                echo "unknown" ;;
+    esac
+}
 
 if [ -z "$HANDOFF_PATH" ]; then
-    # 自动检测：在 细纲/ 和 追踪/ 目录下搜索最近修改的 *handoff*.json
+    # 自动检测（同时兼容旧逐章 handoff JSON 与新卷聚合细纲产物）：
+    #   *handoff*.json（旧） / *delta.json / *细纲与衔接*.md（新）
+    # 便携排序：无 GNU find -printf，改用 stat 取 mtime 逐文件比较（兼容 macOS BSD stat）
+    latest_mtime="-1"
     for subdir in "细纲" "追踪" "."; do
         search_dir="$PROJECT_PATH/$subdir"
-        if [ -d "$search_dir" ]; then
-            found="$(find "$search_dir" -type f -iname '*handoff*.json' -printf '%T@ %p\n' 2>/dev/null \
-                     | sort -rn | head -1 | cut -d' ' -f2-)"
-            if [ -n "$found" ]; then
-                HANDOFF_PATH="$found"
-                break
+        [ -d "$search_dir" ] || continue
+        while IFS= read -r f; do
+            [ -f "$f" ] || continue
+            m="$(stat -c '%Y' "$f" 2>/dev/null || stat -f '%m' "$f" 2>/dev/null || echo 0)"
+            if [ "$m" -gt "$latest_mtime" ]; then
+                latest_mtime="$m"
+                HANDOFF_PATH="$f"
             fi
-        fi
+        done < <(find "$search_dir" -type f \
+                 \( -iname '*handoff*.json' -o -iname '*delta.json' -o -iname '*细纲与衔接*.md' \) 2>/dev/null)
     done
 fi
 
-if [ -n "$HANDOFF_PATH" ] && [ -f "$HANDOFF_PATH" ]; then
+# 确定产物类型（自动检测或显式传入均按文件名判定）
+if [ -n "$HANDOFF_PATH" ]; then
+    HANDOFF_KIND="$(classify_handoff "$HANDOFF_PATH")"
+fi
+
+# 仅旧逐章 handoff JSON 供本 hook 精确解析；delta/md 卷聚合产物不尝试解析
+if [ "$HANDOFF_KIND" = "handoff" ] && [ -f "$HANDOFF_PATH" ]; then
     log "找到衔接包 JSON: $HANDOFF_PATH"
     HANDOFF_DATA="$(cat "$HANDOFF_PATH" 2>/dev/null)"
     if [ -n "$HANDOFF_DATA" ]; then
@@ -214,6 +239,8 @@ if [ -n "$HANDOFF_PATH" ] && [ -f "$HANDOFF_PATH" ]; then
             fi
         fi
     fi
+elif [ -n "$HANDOFF_PATH" ] && [ "$HANDOFF_KIND" != "unknown" ]; then
+    log "检测到卷聚合细纲产物（${HANDOFF_KIND}）: $HANDOFF_PATH"
 fi
 
 # ──────────────────────────────────────────────────────────
@@ -224,14 +251,18 @@ CHAPTER_PATH="$CHAPTER_FILE_ARG"
 CHAPTER_CONTENT=""
 
 if [ -z "$CHAPTER_PATH" ]; then
-    # 自动检测：在 正文/ 目录下搜索最近修改的 .md 文件
+    # 自动检测：在 正文/ 目录下搜索最近修改的 .md 文件（便携排序，无 GNU find -printf）
     prose_dir="$PROJECT_PATH/正文"
     if [ -d "$prose_dir" ]; then
-        found="$(find "$prose_dir" -maxdepth 1 -type f -name '*.md' -printf '%T@ %p\n' 2>/dev/null \
-                 | sort -rn | head -1 | cut -d' ' -f2-)"
-        if [ -n "$found" ]; then
-            CHAPTER_PATH="$found"
-        fi
+        latest_mtime="-1"
+        while IFS= read -r f; do
+            [ -f "$f" ] || continue
+            m="$(stat -c '%Y' "$f" 2>/dev/null || stat -f '%m' "$f" 2>/dev/null || echo 0)"
+            if [ "$m" -gt "$latest_mtime" ]; then
+                latest_mtime="$m"
+                CHAPTER_PATH="$f"
+            fi
+        done < <(find "$prose_dir" -maxdepth 1 -type f -name '*.md' 2>/dev/null)
     fi
 fi
 
@@ -247,19 +278,27 @@ fi
 if [ -z "$HANDOFF_PARSED" ]; then
     log "" "warn"
     log "========================================" "warn"
-    log "  降级提示：未找到或无法解析衔接包 JSON 文件" "warn"
-    log "  请手动更新上下文管理模板：" "warn"
-    log "    - 更新 追踪/上下文管理模板.md 中的角色状态表" "warn"
-    log "    - 更新 追踪/上下文管理模板.md 中的伏笔追踪表" "warn"
-    log "    - 记录当前章号、角色状态、活跃伏笔、下一步任务" "warn"
+    if [ "$HANDOFF_KIND" = "delta" ] || [ "$HANDOFF_KIND" = "md" ]; then
+        log "  降级提示：检测到新卷聚合细纲产物（$HANDOFF_PATH）" "warn"
+        log "  当前细纲以 卷X_delta.json / 卷X_细纲与衔接.md 卷级聚合形态交付，" "warn"
+        log "  无逐章 handoff JSON 可供本 hook 精确更新角色/伏笔状态。" "warn"
+        log "  上下文持久化状态以 细纲生成(02a) 的 state/state.json 为准；" "warn"
+        log "  如需更新 追踪/上下文管理模板.md，请人工确认或读取最新卷 delta 同步。" "warn"
+    else
+        log "  降级提示：未找到可用的逐章衔接包 JSON" "warn"
+        log "  请手动更新上下文管理模板：" "warn"
+        log "    - 更新 追踪/上下文管理模板.md 中的角色状态表" "warn"
+        log "    - 更新 追踪/上下文管理模板.md 中的伏笔追踪表" "warn"
+        log "    - 记录当前章号、角色状态、活跃伏笔、下一步任务" "warn"
+    fi
     log "========================================" "warn"
     log "" "warn"
 
     # 即使没有衔接包，也尝试从正文中提取角色状态（简化版）
     if [ -n "$CHAPTER_CONTENT" ]; then
         # 无衔接包时无法获知角色名，输出通用提示
-        log "（降级）已读取正文，但无衔接包角色名，无法提取角色状态变化" "warn"
-        log "  建议安装 node.js 以启用完整 JSON 解析" "warn"
+        log "（降级）已读取正文，但无逐章衔接包角色名，无法精确提取角色状态变化。" "warn"
+        log "  建议人工核对正文中的角色状态变化并同步到上下文管理模板。" "warn"
     fi
     exit 0
 fi
@@ -559,12 +598,12 @@ log "已更新上下文管理模板: $CONTEXT_FILE"
 
 [ -d "$SNAPSHOT_DIR" ] || mkdir -p "$SNAPSHOT_DIR"
 
-# 推断下一步任务
+# 推断下一步任务（审稿周期：每5章小审/每10章大审，卷末或质量存疑随时审）
 NEXT_TASK="Ch.$((CHAPTER_NO + 1)) 细纲生成（02a）+ 扩写（03a）"
 if [ "$CHAPTER_NO" -gt 0 ] 2>/dev/null; then
-    MOD3=$((CHAPTER_NO % 3))
-    if [ "$MOD3" -eq 0 ]; then
-        NEXT_TASK="每3章审稿（09 多视角审稿，4-Agent 必执行）+ 补纲 5-10 章（02a 滚动建纲）"
+    MOD5=$((CHAPTER_NO % 5))
+    if [ "$MOD5" -eq 0 ]; then
+        NEXT_TASK="周期性审稿（内置：每5章小审/每10章大审）+ 补纲 5-10 章（02a 滚动建纲）"
     fi
 fi
 
@@ -625,27 +664,18 @@ SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)/scripts"
 # 规则执行遥测
 if [ -f "$SCRIPT_DIR/check-rule-execution.js" ] && command -v node >/dev/null 2>&1; then
     log "运行规则执行遥测..."
-    if node "$SCRIPT_DIR/check-rule-execution.js" --project "$PROJECT_PATH" --chapter "$CHAPTER_FILE" 2>&1; then
+    if node "$SCRIPT_DIR/check-rule-execution.js" --project "$PROJECT_PATH" --chapter "$CHAPTER_PATH" 2>&1; then
         log "规则执行遥测完成，报告已写入 追踪/rule-execution-telemetry.json"
     else
-        log "规则执行遥测跳过（执行失败）" "yellow"
+        log "规则执行遥测跳过（执行失败）" "warn"
     fi
 else
     log "check-rule-execution.js 或 node 未找到，跳过遥测"
 fi
 
-# Dashboard生成
-if [ -f "$SCRIPT_DIR/generate-dashboard.js" ] && command -v node >/dev/null 2>&1; then
-    log "生成HTML进度面板..."
-    DASHBOARD_OUTPUT="$TRACK_DIR/dashboard.html"
-    if node "$SCRIPT_DIR/generate-dashboard.js" --project "$PROJECT_PATH" --output "$DASHBOARD_OUTPUT" 2>&1; then
-        log "HTML进度面板已生成: $DASHBOARD_OUTPUT"
-    else
-        log "Dashboard生成跳过（执行失败）" "yellow"
-    fi
-else
-    log "generate-dashboard.js 或 node 未找到，跳过Dashboard"
-fi
+# Dashboard生成（明确降级：generate-dashboard.js 在任何技能中均不存在）
+# 家族约定：脚本缺失 → 明确提示并跳过（不静默、不假装阻断）。
+log "未找到 generate-dashboard.js —— HTML 进度面板/看板生成不在本流水线 hooks 职责内，本 hook 仅提示，跳过。" "warn"
 
 # ──────────────────────────────────────────────────────────
 #  7. 汇总输出
@@ -673,8 +703,7 @@ echo "  伏笔追踪: ${FS_COUNT} 条（活跃 ${ACTIVE_COUNT} 条）"
 echo "  正文状态提示: ${PROSE_COUNT} 条"
 echo "  上下文模板: ${CONTEXT_FILE}"
 echo "  断点快照: ${SNAPSHOT_FILE}"
-echo "  规则遥测: 追踪/rule-execution-telemetry.json"
-echo "  进度面板: 追踪/dashboard.html"
+echo "  规则遥测: 追踪/rule-execution-telemetry.json（若脚本可用）"
 echo "  下一步: ${NEXT_TASK}"
 echo "========================================"
 

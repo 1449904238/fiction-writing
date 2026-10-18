@@ -1,6 +1,7 @@
 ---
 name: novel-outline-builder
 description: 为中文网络小说设计、重构和审计可写作的长篇大纲。独立接收一份小说设定（`_设定架构.md` 样式的设定文档或等价设定材料），将其转化为故事引擎、分卷结构、章节计划、伏笔和分支，并输出可校验、可执行的完整大纲。
+version: 1.3.0
 ---
 
 # 小说大纲构建师
@@ -15,7 +16,7 @@ description: 为中文网络小说设计、重构和审计可写作的长篇大�
 
 消费 `设定包/` 时要**忠实传递**它的线索账本与写作约束，不是参考：`clue_ledger` → `foreshadowing`（用 `source_clue` 绑定），`narrative_guardrails.avoid_moves/required_moves` → `genre_profile.avoid_moves/must_deliver`，`.work/core_gate.json` → `direction_gate`，`02` 的 `scene_test` → `gocs/state_delta`。完整字段映射见 [references/大纲数据契约.md](references/大纲数据契约.md) 的「设定包 → 大纲 字段映射」表；`validate --setting-package <目录>` 会对映射做机检。
 
-《档案余烬》的示例设定包（`小说设定架构师/references/示例_完整设定包/`）只是输入形状示例，不是绑定内容：对任何同形状的设定文档都必须成立，题材、人物与规则全部取自实际输入的设定，不得因为示例本身而默认复用这一套题材和角色。
+《雾港档案》的示例设定包（`../小说设定架构师/示例_设定包/`，悬疑题材四件套）只是输入形状示例，不是绑定内容：对任何同形状的设定文档都必须成立，题材、人物与规则全部取自实际输入的设定，不得因为示例本身而默认复用这一套题材和角色。
 
 从设定中提取并按原样保留：角色名、目标、底线、关系、规则、地点、势力、资源、不可逆事实和结局意图。明确标注哪些是“新增推导”，把会阻塞大纲的缺失写进 `open_decisions`（每项含 `question`、`blocks`、`owner`），不要在缺失项上伪造设定。不要虚构榜单、平台政策、阅读数据或对标原文；没有可靠材料时，把节奏要求标为 `editorial_assumption`。
 
@@ -127,11 +128,11 @@ description: 为中文网络小说设计、重构和审计可写作的长篇大�
 - 情绪不是只用“高/中/低”标记：同时记录具体体验和节奏功能，二者不得混用。
 - `open_decisions` 未包含会使后续写作自相矛盾的未决问题。
 
-将机器资产保存为 `01_大纲数据.json`（纯对话且用户不需要机器资产时可以省略，但仍须先在文本中完成同等检查）。只要生成 JSON，就统一运行 `scripts/finalize_outline.py 01_大纲数据.json --skip-handoff`：它执行版本/语义校验、写连续性账本与 `03_审计回执.json`，并跳过细纲交接投影（本 skill 只产出大纲）。续批时追加 `--previous <上一批输出目录>` 触发跨批核验（章节衔接、线程/伏笔承接、实体终态、版本不降级）。没有 `status=passed` 的审计回执，不得交付或声称已完成；校验失败进入 `MODE_REPAIR`，不以"后续再补"放行。
+将机器资产保存为 `01_大纲数据.json`（纯对话且用户不需要机器资产时可以省略，但仍须先在文本中完成同等检查）。只要生成 JSON，就统一运行 `scripts/finalize_outline.py 01_大纲数据.json --skip-handoff`：它执行版本/语义校验、写连续性账本与 `03_审计回执.json`，并跳过 `02_细纲交接` 投影。关于 `--skip-handoff`：`finalize_outline.py` 默认会产出 `02_细纲交接`（可选投影，下游细纲构建的消费格式），加 `--skip-handoff` 才不产出；本 skill 只交付大纲，故统一加该标志，仅在确有明确的下游细纲消费者请求时才去掉它重新运行。续批时追加 `--previous <上一批输出目录>` 触发跨批核验（章节衔接、线程/伏笔承接、实体终态、版本不降级）。没有 `status=passed` 的审计回执，不得交付或声称已完成；校验失败进入 `MODE_REPAIR`，不以"后续再补"放行。
 
 回执中的 `WARN` 项是分级门禁的质量路由：机检不拒绝，但必须按 [references/judge_protocol.md](references/judge_protocol.md) 做语义评审抽查，评审产出的判断文件用 `scripts/verify_judgment.py` 核验证据锚点后才作数。没有评审结论时，warn 只能如实转述，不得宣称“已确认无问题”。
 
-`03_连续性账本.json` 是内部派生保障与跨批核验依赖（含 `--previous` 续批），在任何模式下始终由 finalize 写出；`02_细纲交接.json/.md` 是**下游细纲构建的消费格式，非本 skill 产出**，仅在有明确下游消费者请求时剥去 `--skip-handoff` 生成。投影文件是派生物，不得手工修成另一套事实。
+`03_连续性账本.json` 是内部派生保障与跨批核验依赖（含 `--previous` 续批），在任何模式下始终由 finalize 写出。`02_细纲交接.json/.md` 是 `finalize_outline.py` 的**可选投影、下游细纲构建的消费格式，非本 skill 的常规产出**：不带 `--skip-handoff` 运行时 finalize 会生成它，带该标志则跳过；本 skill 默认带标志运行（只交付大纲），去掉标志即表示按明确的下游细纲消费者请求产出交接。投影文件是派生物，不得手工修成另一套事实。
 
 可用 `python evals/run_evals.py examples --report evals/report.json` 做结构烟雾评测；`python evals/run_evals.py --self-test` 一键运行全部对抗回归套件（题材契约 block/warn 分级、商业层机检、语义评审证据核验、跨批负例与正例链路、1.2 兼容回归）。质量盲评按 [evals/quality_rubric.json](evals/quality_rubric.json) 和 [evals/review-template.md](evals/review-template.md) 记录，再用 `python evals/aggregate_reviews.py REVIEWS_DIR` 汇总。评测报告中未测的质量项必须保持 `unmeasured`，不得填入推测百分比。
 
@@ -147,6 +148,6 @@ description: 为中文网络小说设计、重构和审计可写作的长篇大�
 2. `01_大纲数据.json`（可选机器权威）：严格遵守 [大纲数据契约](references/大纲数据契约.md)，不使用占位符；生成就必须通过 `finalize_outline.py`。
 3. `03_审计回执.json`（质量凭证）：`finalize_outline.py` 写出，证明各门禁通过；无 `status=passed` 不得交付。
 4. `03_连续性账本.json`（内部保障）：连续性派生，供跨批核验保证一致性；不在交付物里强推。
-5. `02_细纲交接.json/.md`（**下游消费格式，非本 skill 产出**）：仅当存在明确的下游细纲/扩写消费者请求时，用 `finalize_outline.py --skip-handoff` 之外的方式生成；否则一律不产出，并在简报中注明"细纲交接属下游细纲构建，本 skill 已交付大纲"。默认禁止产出细纲交接。
+5. `02_细纲交接.json/.md`（`finalize_outline.py` 的**可选投影**，下游细纲构建的消费格式，非本 skill 的常规产出）：默认不产出——本 skill 交付时统一用 `finalize_outline.py --skip-handoff` 运行；仅当存在明确的下游细纲/扩写消费者请求时，去掉 `--skip-handoff` 重新运行才会生成。未产出时在简报中注明"细纲交接属下游细纲构建，本 skill 已交付大纲"。
 
 输出后简要列出：已验证项、新增推导、创作假设、`open_decisions` 和下一批建议规划的章节。不要在最终资产中输出自评打分、历史版本日志或无依据的"市场验证"结论。
